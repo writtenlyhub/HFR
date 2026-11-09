@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { BookingStatus, BlockReason, BookingSource } from "@prisma/client";
+import crypto from "crypto";
 
 export interface CheckAvailabilityParams {
   propertySlug?: string;
@@ -63,6 +64,7 @@ export interface CreateHoldParams {
 export interface HoldResult {
   success: boolean;
   holdId?: string;
+  holdToken?: string;
   bookingReference?: string;
   holdExpiresAt?: Date;
   expiresInSeconds?: number;
@@ -331,6 +333,7 @@ export async function createBookingHold(params: CreateHoldParams): Promise<HoldR
         return {
           success: true,
           holdId: existing.id,
+          holdToken: existing.holdToken || undefined,
           bookingReference: existing.bookingReference,
           holdExpiresAt: existing.holdExpiresAt,
           expiresInSeconds: Math.max(
@@ -394,9 +397,10 @@ export async function createBookingHold(params: CreateHoldParams): Promise<HoldR
   const now = new Date();
   const holdExpiresAt = new Date(now.getTime() + 15 * 60 * 1000); // 15-minute hold
 
-  // Generate unique booking reference: HFR-YYYY-XXXXXX
+  // Generate unique booking reference: HFR-YYYY-XXXXXX and secure unguessable hold token
   const randomSuffix = Math.random().toString(36).substring(2, 8).toUpperCase();
   const bookingReference = `HFR-${new Date().getFullYear()}-${randomSuffix}`;
+  const holdToken = crypto.randomBytes(32).toString("hex");
 
   try {
     // 2. Transaction with PostgreSQL Row-Level Lock
@@ -452,6 +456,7 @@ export async function createBookingHold(params: CreateHoldParams): Promise<HoldR
             specialRequests: params.specialRequests || null,
             status: BookingStatus.PENDING_HOLD,
             holdExpiresAt,
+            holdToken,
             idempotencyKey: params.idempotencyKey || null,
             currency: "INR",
             baseAmount,
@@ -510,6 +515,7 @@ export async function createBookingHold(params: CreateHoldParams): Promise<HoldR
     return {
       success: true,
       holdId: booking.id,
+      holdToken: booking.holdToken || holdToken,
       bookingReference: booking.bookingReference,
       holdExpiresAt: booking.holdExpiresAt!,
       expiresInSeconds: 15 * 60,
@@ -546,13 +552,15 @@ export async function createBookingHold(params: CreateHoldParams): Promise<HoldR
  */
 export async function releaseHold(bookingId: string): Promise<boolean> {
   return await prisma.$transaction(async (tx) => {
-    const booking = await tx.booking.findUnique({
-      where: { id: bookingId },
-    });
+    // Acquire row-level lock on the booking to serialize against payment confirmation
+    const locked = await tx.$queryRaw<Array<{ id: string; status: string; booking_reference: string }>>`
+      SELECT id, status, booking_reference FROM bookings WHERE id = ${bookingId} FOR UPDATE
+    `;
 
-    if (!booking) return false;
+    if (!locked || locked.length === 0) return false;
+    const booking = locked[0];
 
-    // Only release if still in PENDING_HOLD (never release a confirmed booking!)
+    // Only release if still in PENDING_HOLD (never release a confirmed or paying booking!)
     if (booking.status !== BookingStatus.PENDING_HOLD) {
       return false;
     }
@@ -578,7 +586,7 @@ export async function releaseHold(bookingId: string): Promise<boolean> {
         action: "HOLD_RELEASED",
         entityType: "Booking",
         entityId: bookingId,
-        metadata: { bookingReference: booking.bookingReference },
+        metadata: { bookingReference: booking.booking_reference },
       },
     });
 

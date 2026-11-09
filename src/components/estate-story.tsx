@@ -108,6 +108,7 @@ export function EstateStory({ amenities, listingOptions }: EstateStoryProps) {
   // Active Hold Result & Countdown
   const [activeHold, setActiveHold] = useState<{
     holdId: string;
+    holdToken?: string;
     bookingReference: string;
     holdExpiresAt: string;
     expiresInSeconds: number;
@@ -200,6 +201,7 @@ export function EstateStory({ amenities, listingOptions }: EstateStoryProps) {
 
       setActiveHold({
         holdId: json.data.holdId,
+        holdToken: json.data.holdToken,
         bookingReference: json.data.bookingReference,
         holdExpiresAt: json.data.holdExpiresAt,
         expiresInSeconds: json.data.expiresInSeconds,
@@ -227,6 +229,7 @@ export function EstateStory({ amenities, listingOptions }: EstateStoryProps) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           bookingId: params.bookingId,
+          holdToken: activeHold?.holdToken,
           razorpayOrderId: params.razorpayOrderId,
           razorpayPaymentId: params.razorpayPaymentId,
           razorpaySignature: params.razorpaySignature,
@@ -274,7 +277,10 @@ export function EstateStory({ amenities, listingOptions }: EstateStoryProps) {
       const orderRes = await fetch("/api/payments/create-order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ bookingId: activeHold.holdId }),
+        body: JSON.stringify({
+          bookingId: activeHold.holdId,
+          holdToken: activeHold.holdToken,
+        }),
       });
 
       const orderData = await orderRes.json();

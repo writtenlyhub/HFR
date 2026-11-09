@@ -314,6 +314,7 @@ model Booking {
   specialRequests    String?       @map("special_requests") @db.Text
   status             BookingStatus @default(PENDING_HOLD)
   holdExpiresAt      DateTime?     @map("hold_expires_at")
+  holdToken          String?       @map("hold_token")
   idempotencyKey     String?       @unique @map("idempotency_key")
   currency           String        @default("INR")
   baseAmount         Decimal       @map("base_amount") @db.Decimal(10, 2)
@@ -413,6 +414,7 @@ model Refund {
   paymentId        String       @map("payment_id")
   bookingId        String       @map("booking_id")
   razorpayRefundId String?      @unique @map("razorpay_refund_id")
+  idempotencyKey   String?      @unique @map("idempotency_key")
   amount           Decimal      @db.Decimal(10, 2)
   status           RefundStatus @default(PENDING)
   reason           String?      @db.Text

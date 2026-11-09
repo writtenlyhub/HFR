@@ -122,9 +122,10 @@ export async function confirmPaymentAndBooking(
       `;
 
       // 4. Overlap Safety Invariant:
-      // Verify no OTHER confirmed booking occupies overlapping dates on this shared inventory group
+      // Verify no OTHER confirmed booking or active hold occupies overlapping dates on this shared inventory group
       const checkIn = new Date(booking.check_in_date);
       const checkOut = new Date(booking.check_out_date);
+      const now = new Date();
 
       const conflictingBlocks = await tx.availabilityBlock.findMany({
         where: {
@@ -132,7 +133,13 @@ export async function confirmPaymentAndBooking(
           bookingId: { not: booking.id },
           startDate: { lt: checkOut },
           endDate: { gt: checkIn },
-          reason: { not: BlockReason.BOOKING_HOLD }, // Other confirmed reservations, airbnb, maintenance
+          OR: [
+            { reason: { not: BlockReason.BOOKING_HOLD } }, // Other confirmed reservations, airbnb, maintenance
+            {
+              reason: BlockReason.BOOKING_HOLD,
+              expiresAt: { gt: now }, // Active unexpired hold by another customer
+            },
+          ],
         },
       });
 
@@ -192,6 +199,17 @@ export async function confirmPaymentAndBooking(
           bookingReference: booking.booking_reference,
           status: BookingStatus.REFUND_PENDING,
           message: "Inventory was reserved by another guest prior to payment completion. Refund has been initiated.",
+          booking: {
+            id: booking.id,
+            bookingReference: booking.booking_reference,
+            customerName: booking.customer_name,
+            customerEmail: booking.customer_email,
+            totalAmount: Number(booking.total_amount),
+            checkInDate: checkIn,
+            checkOutDate: checkOut,
+            nights: booking.nights,
+            guestCount: booking.guestCount,
+          },
         };
       }
 
@@ -318,9 +336,13 @@ export async function handlePaymentFailure(params: {
 }): Promise<void> {
   const { bookingId, razorpayOrderId, razorpayPaymentId, failureReason, rawPayload } = params;
 
+  // Never downgrade an already CAPTURED or REFUNDED payment!
   if (razorpayOrderId) {
     await prisma.payment.updateMany({
-      where: { razorpayOrderId },
+      where: {
+        razorpayOrderId,
+        status: { notIn: [PaymentStatus.CAPTURED, PaymentStatus.REFUNDED] },
+      },
       data: {
         status: PaymentStatus.FAILED,
         failureReason: failureReason || "Payment failed or was cancelled by user.",
@@ -329,13 +351,18 @@ export async function handlePaymentFailure(params: {
     });
   }
 
+  // Never downgrade an already CONFIRMED, REFUND_PENDING, or REFUNDED booking!
   if (bookingId) {
     const booking = await prisma.booking.findUnique({
       where: { id: bookingId },
     });
 
-    // Only update booking if it hasn't already been confirmed
-    if (booking && booking.status !== BookingStatus.CONFIRMED) {
+    if (
+      booking &&
+      booking.status !== BookingStatus.CONFIRMED &&
+      booking.status !== BookingStatus.REFUND_PENDING &&
+      booking.status !== BookingStatus.REFUNDED
+    ) {
       await prisma.booking.update({
         where: { id: bookingId },
         data: {

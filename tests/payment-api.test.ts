@@ -52,7 +52,7 @@ async function runApiTests() {
     const req1 = new NextRequest("http://localhost:3000/api/payments/create-order", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ bookingId: holdRes.holdId }),
+      body: JSON.stringify({ bookingId: holdRes.holdId, holdToken: holdRes.holdToken }),
     });
 
     const res1 = await createOrderRoute(req1);
@@ -76,6 +76,7 @@ async function runApiTests() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         bookingId: holdRes.holdId,
+        holdToken: holdRes.holdToken,
         razorpayOrderId: data1.orderId,
         razorpayPaymentId: "pay_tampered_999",
         razorpaySignature: "fake_signature_hash_1234567890abcdef",
@@ -98,6 +99,7 @@ async function runApiTests() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         bookingId: holdRes.holdId,
+        holdToken: holdRes.holdToken,
         razorpayOrderId: data1.orderId,
         razorpayPaymentId: validPaymentId,
         razorpaySignature: validSignature,
@@ -201,3 +203,4 @@ runApiTests().catch((err) => {
   console.error("API route test failed:", err);
   process.exit(1);
 });
+
