@@ -76,6 +76,7 @@ export default async function HomePage() {
             slug: o.slug,
             title: o.title,
             basePricePerNight: o.basePricePerNight,
+            maxGuests: o.maxGuests,
           }))}
         />
         <GuestReviews />

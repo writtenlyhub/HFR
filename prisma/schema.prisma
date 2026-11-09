@@ -230,6 +230,10 @@ model ListingOption {
   description          String   @db.Text
   summary              String?  @db.Text
   coverImage           String?
+  bedConfiguration     String?  @map("bed_configuration")
+  sizeSqFt             Int?     @map("size_sq_ft")
+  highlights           String[] @default([])
+  amenitiesList        String[] @default([]) @map("amenities_list")
   isFeatured           Boolean  @default(false)
   isActive             Boolean  @default(true)
   sortOrder            Int      @default(0)

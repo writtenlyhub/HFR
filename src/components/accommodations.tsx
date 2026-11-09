@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+
 interface ListingOptionData {
   id: string;
   slug: string;
@@ -23,7 +25,11 @@ interface AccommodationsProps {
 }
 
 export function Accommodations({ options, onSelectOption }: AccommodationsProps) {
-  const handleSelect = (slug: string) => {
+  const getRouteSlug = (slug: string) => {
+    return slug === "full-estate-buyout" ? "full-estate" : slug;
+  };
+
+  const handleCardClick = (slug: string) => {
     if (onSelectOption) {
       onSelectOption(slug);
     }
@@ -31,12 +37,9 @@ export function Accommodations({ options, onSelectOption }: AccommodationsProps)
       window.dispatchEvent(
         new CustomEvent("select-configuration", { detail: { slug } })
       );
-      const target = document.getElementById("sidebar-booking-card");
-      if (target) {
-        target.scrollIntoView({ behavior: "smooth" });
-      }
     }
   };
+
   return (
     <section
       className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 py-12"
@@ -69,6 +72,8 @@ export function Accommodations({ options, onSelectOption }: AccommodationsProps)
         {options.map((opt) => {
           const priceNum = Number(opt.basePricePerNight) || 8500;
           const formattedPrice = "₹" + priceNum.toLocaleString("en-IN");
+          const routeSlug = getRouteSlug(opt.slug);
+          const detailUrl = `/properties/dev-stays-jaipur/${routeSlug}`;
 
           // Determine guest badge string
           let badgeText = `Up to ${opt.maxGuests} Guests`;
@@ -87,8 +92,12 @@ export function Accommodations({ options, onSelectOption }: AccommodationsProps)
               className="bg-white rounded-3xl border border-neutral-200 overflow-hidden flex flex-col justify-between shadow-sm hover:shadow-md transition-all duration-300 p-4 sm:p-5 group"
             >
               <div>
-                {/* Image Frame */}
-                <div className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl mb-5 bg-neutral-100">
+                {/* Image Frame linking to detail page */}
+                <Link
+                  href={detailUrl}
+                  onClick={() => handleCardClick(opt.slug)}
+                  className="block relative aspect-[4/3] w-full overflow-hidden rounded-2xl mb-5 bg-neutral-100"
+                >
                   {opt.coverImage && (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
@@ -100,14 +109,18 @@ export function Accommodations({ options, onSelectOption }: AccommodationsProps)
                   <div className="absolute top-3 left-3 bg-white/95 backdrop-blur-md px-3 py-1 rounded-full text-[11px] font-bold text-neutral-900 border border-neutral-200 shadow-xs">
                     {badgeText}
                   </div>
-                </div>
+                </Link>
 
-                {/* Details */}
+                {/* Details with clickable Title */}
                 <div className="px-2">
                   <div className="flex items-baseline justify-between mb-1.5">
-                    <h3 className="text-xl sm:text-2xl font-bold text-neutral-900">
+                    <Link
+                      href={detailUrl}
+                      onClick={() => handleCardClick(opt.slug)}
+                      className="text-xl sm:text-2xl font-bold text-neutral-900 hover:text-amber-800 transition-colors"
+                    >
                       {opt.title}
-                    </h3>
+                    </Link>
                     <div className="text-right">
                       <span className="text-sm sm:text-base font-extrabold text-neutral-900">
                         {formattedPrice}
@@ -122,25 +135,29 @@ export function Accommodations({ options, onSelectOption }: AccommodationsProps)
                   </p>
 
                   <div className="flex items-center gap-3 mt-4 text-[11px] text-neutral-500 font-medium">
-                    <span>{opt.bedroomCount} {opt.bedroomCount === 1 ? "Bedroom" : "Bedrooms"}</span>
+                    <span>
+                      {opt.bedroomCount} {opt.bedroomCount === 1 ? "Bedroom" : "Bedrooms"}
+                    </span>
                     <span>•</span>
-                    <span>{opt.bathroomCount} {opt.bathroomCount === 1 ? "Bath" : "Baths"}</span>
+                    <span>
+                      {opt.bathroomCount} {opt.bathroomCount === 1 ? "Bath" : "Baths"}
+                    </span>
                     <span>•</span>
                     <span>Heated Plunge Pool</span>
                   </div>
                 </div>
               </div>
 
-              {/* Action */}
+              {/* Action Button linking to detail page */}
               <div className="px-2 pt-6 mt-auto">
-                <button
-                  type="button"
-                  onClick={() => handleSelect(opt.slug)}
+                <Link
+                  href={detailUrl}
+                  onClick={() => handleCardClick(opt.slug)}
                   className="w-full py-3.5 bg-black hover:bg-neutral-800 text-white text-xs uppercase tracking-wider font-semibold rounded-full transition-all shadow-sm flex items-center justify-center gap-2 group-hover:gap-3 cursor-pointer"
                 >
                   <span>{buttonText}</span>
                   <span>→</span>
-                </button>
+                </Link>
               </div>
             </div>
           );
