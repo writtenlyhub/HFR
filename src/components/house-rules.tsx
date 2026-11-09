@@ -21,6 +21,7 @@ export function HouseRules() {
     <section
       className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 py-16 border-t border-neutral-200"
       data-purpose="things-to-know"
+      id="house-rules"
     >
       <div className="mb-10">
         <span className="text-[11px] font-bold tracking-[0.2em] text-neutral-500 uppercase">

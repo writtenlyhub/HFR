@@ -94,8 +94,9 @@ export function PhotoGallery({ images = [] }: PhotoGalleryProps) {
     <section
       className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 pt-8 pb-12"
       data-purpose="property-gallery"
-      id="property-gallery"
+      id="gallery"
     >
+      <div id="property-gallery" className="sr-only" aria-hidden="true" />
       {/* Header bar */}
       <div className="flex flex-col sm:row sm:items-end justify-between mb-4 gap-2">
         <div>

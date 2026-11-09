@@ -31,12 +31,14 @@ export function InquiryForm() {
     <section
       className="w-full pt-20 pb-0 overflow-hidden relative"
       data-purpose="cta-banner"
-      id="direct-booking"
+      id="contact"
       style={{
         background:
           "linear-gradient(rgb(108, 153, 198) 0%, rgb(136, 177, 216) 35%, rgb(166, 198, 226) 65%, rgb(200, 221, 237) 100%)",
       }}
     >
+      <div id="direct-booking" className="sr-only" aria-hidden="true" />
+      <div id="inquire" className="sr-only" aria-hidden="true" />
       <div className="max-w-5xl mx-auto px-4 sm:px-6 text-center relative z-10">
         <div className="inline-flex items-center px-5 py-2 rounded-full bg-white/30 backdrop-blur-md text-white text-xs font-semibold uppercase tracking-wider mb-6">
           Get in Touch
