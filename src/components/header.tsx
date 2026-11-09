@@ -196,37 +196,6 @@ export function Header({ session }: HeaderProps) {
           </div>
         </Link>
 
-        {/* Clean Desktop Navigation Bar with Dynamic Scroll-Spy */}
-        <nav
-          className="hidden lg:flex items-center gap-2.5 xl:gap-4 2xl:gap-5 text-[10.5px] xl:text-[11.5px] 2xl:text-xs font-semibold uppercase tracking-wider text-neutral-500 whitespace-nowrap"
-          aria-label="Main Navigation"
-        >
-          {NAV_SECTIONS.map((section) => {
-            const isActive = isHomePage && activeSection === section.id;
-            const targetHref = isHomePage ? `#${section.id}` : `/#${section.id}`;
-
-            return (
-              <Link
-                key={section.id}
-                href={targetHref}
-                onClick={(e) => handleNavClick(e, section.id)}
-                className={`relative py-1 transition-colors duration-200 ${
-                  isActive
-                    ? "text-black font-bold"
-                    : "text-neutral-500 hover:text-black font-medium"
-                }`}
-              >
-                {section.label}
-                {isActive && (
-                  <span
-                    className="absolute -bottom-1 left-0 right-0 h-[1.75px] bg-black rounded-full transition-all duration-300"
-                  />
-                )}
-              </Link>
-            );
-          })}
-        </nav>
-
         {/* Right Action Controls: Admin, Sign In & Primary Booking CTA */}
         <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           {/* Admin link if user is ADMIN */}
