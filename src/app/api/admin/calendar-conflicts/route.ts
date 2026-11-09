@@ -1,0 +1,40 @@
+import { NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+
+export async function GET() {
+  try {
+    const conflictLogs = await prisma.auditLog.findMany({
+      where: { action: "CALENDAR_SYNC_CONFLICT_DETECTED" },
+      orderBy: { createdAt: "desc" },
+      take: 50,
+    });
+
+    const conflictEvents = await prisma.externalCalendarEvent.findMany({
+      where: {
+        rawMetadata: {
+          path: ["hasConflict"],
+          equals: true,
+        },
+      },
+      include: {
+        connection: {
+          select: { id: true, connectionName: true, platform: true },
+        },
+      },
+      orderBy: { startDate: "asc" },
+    });
+
+    return NextResponse.json({
+      success: true,
+      conflictLogs,
+      conflictEvents,
+    });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error("Failed to fetch calendar conflicts:", message);
+    return NextResponse.json(
+      { success: false, error: "Failed to retrieve calendar conflicts" },
+      { status: 500 }
+    );
+  }
+}

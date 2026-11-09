@@ -1,0 +1,148 @@
+import { NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+import { validateCalendarUrl } from "@/lib/calendar/ical-import";
+
+export async function GET(
+  _request: Request,
+  props: { params: Promise<{ id: string }> | { id: string } }
+) {
+  try {
+    const params = await props.params;
+    const { id } = params;
+
+    const connection = await prisma.externalCalendarConnection.findUnique({
+      where: { id },
+      include: {
+        inventoryGroup: true,
+        listingOption: true,
+        events: {
+          orderBy: { startDate: "asc" },
+          take: 100,
+        },
+        syncLogs: {
+          orderBy: { startedAt: "desc" },
+          take: 20,
+        },
+        availabilityBlocks: {
+          take: 50,
+          orderBy: { startDate: "asc" },
+        },
+      },
+    });
+
+    if (!connection) {
+      return NextResponse.json({ success: false, error: "Connection not found" }, { status: 404 });
+    }
+
+    return NextResponse.json({ success: true, connection });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error("Failed to retrieve connection:", message);
+    return NextResponse.json(
+      { success: false, error: "Failed to retrieve connection details" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function PATCH(
+  request: Request,
+  props: { params: Promise<{ id: string }> | { id: string } }
+) {
+  try {
+    const params = await props.params;
+    const { id } = params;
+    const body = await request.json();
+
+    const existing = await prisma.externalCalendarConnection.findUnique({
+      where: { id },
+    });
+
+    if (!existing) {
+      return NextResponse.json({ success: false, error: "Connection not found" }, { status: 404 });
+    }
+
+    const { connectionName, importUrl, isActive, syncIntervalMinutes } = body;
+
+    const updateData: Record<string, unknown> = {};
+
+    if (connectionName !== undefined && typeof connectionName === "string") {
+      updateData.connectionName = connectionName.trim();
+    }
+
+    if (isActive !== undefined && typeof isActive === "boolean") {
+      updateData.isActive = isActive;
+    }
+
+    if (syncIntervalMinutes !== undefined) {
+      updateData.syncIntervalMinutes = Math.max(5, parseInt(String(syncIntervalMinutes), 10) || 15);
+    }
+
+    if (importUrl !== undefined) {
+      if (importUrl === null || importUrl === "") {
+        updateData.importUrl = null;
+      } else {
+        const cleanUrl = String(importUrl).trim();
+        const urlCheck = await validateCalendarUrl(cleanUrl, {
+          allowLocalForTesting: process.env.NODE_ENV !== "production",
+        });
+        if (!urlCheck.valid) {
+          return NextResponse.json(
+            { success: false, error: `Invalid or unsafe calendar URL: ${urlCheck.reason}` },
+            { status: 400 }
+          );
+        }
+        updateData.importUrl = cleanUrl;
+      }
+    }
+
+    const updated = await prisma.externalCalendarConnection.update({
+      where: { id },
+      data: updateData,
+    });
+
+    return NextResponse.json({ success: true, connection: updated });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error("Failed to update connection:", message);
+    return NextResponse.json(
+      { success: false, error: message || "Failed to update connection" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(
+  _request: Request,
+  props: { params: Promise<{ id: string }> | { id: string } }
+) {
+  try {
+    const params = await props.params;
+    const { id } = params;
+
+    const existing = await prisma.externalCalendarConnection.findUnique({
+      where: { id },
+    });
+
+    if (!existing) {
+      return NextResponse.json({ success: false, error: "Connection not found" }, { status: 404 });
+    }
+
+    // Cascade deletion handles availability blocks, events, and sync logs cleanly
+    await prisma.externalCalendarConnection.delete({
+      where: { id },
+    });
+
+    return NextResponse.json({
+      success: true,
+      message: `Connection ${existing.connectionName} deleted successfully`,
+    });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error("Failed to delete connection:", message);
+    return NextResponse.json(
+      { success: false, error: message || "Failed to delete connection" },
+      { status: 500 }
+    );
+  }
+}

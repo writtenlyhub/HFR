@@ -518,6 +518,7 @@ async function runSecurityAuditTests() {
     console.log("\n==========================================================================");
     console.log(`  ALL ${passedCount} SECURITY & RELIABILITY AUDIT ASSERTIONS PASSED!`);
     console.log("==========================================================================\n");
+    process.exit(0);
   } finally {
     // Cleanup
     console.log("Cleaning up audit test records...");

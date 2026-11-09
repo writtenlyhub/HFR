@@ -38,6 +38,8 @@ enum BlockReason {
   BOOKING_HOLD
   BOOKING_CONFIRMED
   EXTERNAL_AIRBNB
+  EXTERNAL_CALENDAR
+  EXTERNAL_BOOKING
   ADMIN_MAINTENANCE
   SEASONAL_CLOSURE
 }
@@ -63,6 +65,18 @@ enum ChannelType {
   CHANNEL_MANAGER_GENERIC
   BOOKING_COM
   VRBO
+}
+
+enum CalendarPlatform {
+  AIRBNB
+  BOOKING_COM
+  VRBO
+  OTHER
+}
+
+enum CalendarSyncType {
+  IMPORT
+  EXPORT
 }
 
 enum SyncType {
@@ -194,6 +208,7 @@ model InventoryGroup {
   listingOptions     ListingOption[]
   availabilityBlocks AvailabilityBlock[]
   bookings           Booking[]
+  calendarConnections ExternalCalendarConnection[]
 
   @@index([propertyId])
   @@map("inventory_groups")
@@ -227,6 +242,7 @@ model ListingOption {
   pricingRules     PricingRule[]
   externalListings ExternalChannelListing[]
   images           PropertyImage[]
+  calendarConnections ExternalCalendarConnection[]
 
   @@index([propertyId])
   @@index([inventoryGroupId])
@@ -363,22 +379,28 @@ model BookingGuest {
 }
 
 model AvailabilityBlock {
-  id               String      @id @default(cuid())
-  inventoryGroupId String      @map("inventory_group_id")
-  bookingId        String?     @map("booking_id")
-  startDate        DateTime    @map("start_date")
-  endDate          DateTime    @map("end_date")
-  reason           BlockReason
-  notes            String?     @db.Text
-  expiresAt        DateTime?   @map("expires_at")
-  createdAt        DateTime    @default(now())
+  id                           String      @id @default(cuid())
+  inventoryGroupId             String      @map("inventory_group_id")
+  bookingId                    String?     @map("booking_id")
+  externalCalendarEventId      String?     @map("external_calendar_event_id")
+  externalCalendarConnectionId String?     @map("external_calendar_connection_id")
+  startDate                    DateTime    @map("start_date")
+  endDate                      DateTime    @map("end_date")
+  reason                       BlockReason
+  notes                        String?     @db.Text
+  expiresAt                    DateTime?   @map("expires_at")
+  createdAt                    DateTime    @default(now())
 
-  inventoryGroup InventoryGroup @relation(fields: [inventoryGroupId], references: [id], onDelete: Cascade)
-  booking        Booking?        @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  inventoryGroup             InventoryGroup              @relation(fields: [inventoryGroupId], references: [id], onDelete: Cascade)
+  booking                    Booking?                    @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  externalCalendarEvent      ExternalCalendarEvent?      @relation(fields: [externalCalendarEventId], references: [id], onDelete: Cascade)
+  externalCalendarConnection ExternalCalendarConnection? @relation(fields: [externalCalendarConnectionId], references: [id], onDelete: Cascade)
 
   @@index([inventoryGroupId])
   @@index([startDate, endDate])
   @@index([expiresAt])
+  @@index([externalCalendarEventId])
+  @@index([externalCalendarConnectionId])
   @@map("availability_blocks")
 }
 
@@ -559,4 +581,82 @@ model WebhookEvent {
 
   @@map("webhook_events")
 }
+
+// -------------------------------------------------------------
+// Phase 5: External iCal Calendar Synchronization
+// -------------------------------------------------------------
+
+model ExternalCalendarConnection {
+  id                  String           @id @default(cuid())
+  inventoryGroupId    String           @map("inventory_group_id")
+  listingOptionId     String?          @map("listing_option_id")
+  platform            CalendarPlatform @default(AIRBNB)
+  connectionName      String           @map("connection_name")
+  externalListingId   String?          @map("external_listing_id")
+  importUrl           String?          @map("import_url")
+  exportToken         String           @unique @default(cuid()) @map("export_token")
+  isActive            Boolean          @default(true) @map("is_active")
+  syncIntervalMinutes Int              @default(15) @map("sync_interval_minutes")
+  lastSyncedAt        DateTime?        @map("last_synced_at")
+  nextSyncAt          DateTime?        @map("next_sync_at")
+  lastSyncStatus      String?          @map("last_sync_status")
+  lastSyncError       String?          @map("last_sync_error") @db.Text
+  createdAt           DateTime         @default(now()) @map("created_at")
+  updatedAt           DateTime         @updatedAt @map("updated_at")
+
+  inventoryGroup     InventoryGroup          @relation(fields: [inventoryGroupId], references: [id], onDelete: Cascade)
+  listingOption      ListingOption?          @relation(fields: [listingOptionId], references: [id], onDelete: SetNull)
+  events             ExternalCalendarEvent[]
+  syncLogs           CalendarSyncLog[]
+  availabilityBlocks AvailabilityBlock[]
+
+  @@index([inventoryGroupId])
+  @@index([listingOptionId])
+  @@index([isActive])
+  @@map("external_calendar_connections")
+}
+
+model ExternalCalendarEvent {
+  id                   String    @id @default(cuid())
+  connectionId         String    @map("connection_id")
+  externalUid          String    @map("external_uid")
+  summary              String?
+  startDate            DateTime  @map("start_date")
+  endDate              DateTime  @map("end_date")
+  status               String    @default("CONFIRMED")
+  externalLastModified DateTime? @map("external_last_modified")
+  rawMetadata          Json?     @map("raw_metadata")
+  createdAt            DateTime  @default(now()) @map("created_at")
+  updatedAt            DateTime  @updatedAt @map("updated_at")
+
+  connection         ExternalCalendarConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+  availabilityBlocks AvailabilityBlock[]
+
+  @@unique([connectionId, externalUid])
+  @@index([connectionId])
+  @@index([startDate, endDate])
+  @@map("external_calendar_events")
+}
+
+model CalendarSyncLog {
+  id                String           @id @default(cuid())
+  connectionId      String           @map("connection_id")
+  syncType          CalendarSyncType @default(IMPORT) @map("sync_type")
+  status            String           @default("SUCCESS")
+  eventsProcessed   Int              @default(0) @map("events_processed")
+  eventsCreated     Int              @default(0) @map("events_created")
+  eventsUpdated     Int              @default(0) @map("events_updated")
+  eventsCancelled   Int              @default(0) @map("events_cancelled")
+  conflictsDetected Int              @default(0) @map("conflicts_detected")
+  errorMessage      String?          @map("error_message") @db.Text
+  startedAt         DateTime         @default(now()) @map("started_at")
+  completedAt       DateTime?        @map("completed_at")
+
+  connection ExternalCalendarConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+
+  @@index([connectionId])
+  @@index([startedAt])
+  @@map("calendar_sync_logs")
+}
+
 

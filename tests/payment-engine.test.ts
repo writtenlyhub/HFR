@@ -321,6 +321,7 @@ async function runPaymentTests() {
     console.log("\n===============================================================");
     console.log(`  TEST RESULTS: ${totalPassed}/${totalPassed} PASSED (0 FAILED)`);
     console.log("===============================================================\n");
+    process.exit(0);
   } finally {
     // Cleanup test data
     console.log("Cleaning up test artifacts...");

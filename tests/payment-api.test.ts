@@ -184,6 +184,7 @@ async function runApiTests() {
     console.log("\n===============================================================");
     console.log("  ALL PAYMENT API ROUTE TESTS PASSED SUCCESSFULLY!");
     console.log("===============================================================\n");
+    process.exit(0);
   } finally {
     // Cleanup
     await prisma.webhookEvent.deleteMany({
