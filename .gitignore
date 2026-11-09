@@ -39,3 +39,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Redis snapshot dump
+dump.rdb
+
+# Keep .env.example
+!.env.example

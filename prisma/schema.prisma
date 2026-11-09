@@ -1,0 +1,560 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  CUSTOMER
+  PROPERTY_MANAGER
+  ADMIN
+}
+
+enum BookingStatus {
+  PENDING_HOLD
+  HOLD_EXPIRED
+  PAYMENT_PENDING
+  CONFIRMED
+  CHECKED_IN
+  COMPLETED
+  CANCELLED
+  PAYMENT_FAILED
+  REFUND_PENDING
+  REFUNDED
+  REJECTED
+}
+
+enum BookingSource {
+  DIRECT_WEB
+  AIRBNB
+  ADMIN_MANUAL
+  OTHER_OTA
+}
+
+enum BlockReason {
+  BOOKING_HOLD
+  BOOKING_CONFIRMED
+  EXTERNAL_AIRBNB
+  ADMIN_MAINTENANCE
+  SEASONAL_CLOSURE
+}
+
+enum PaymentStatus {
+  CREATED
+  PENDING
+  AUTHORIZED
+  CAPTURED
+  FAILED
+  REFUNDED
+}
+
+enum RefundStatus {
+  PENDING
+  PROCESSED
+  FAILED
+}
+
+enum ChannelType {
+  AIRBNB
+  ICAL
+  CHANNEL_MANAGER_GENERIC
+  BOOKING_COM
+  VRBO
+}
+
+enum SyncType {
+  PUSH_AVAILABILITY
+  PULL_RESERVATIONS
+  ICAL_EXPORT
+  ICAL_IMPORT
+  WEBHOOK
+}
+
+enum SyncStatus {
+  SUCCESS
+  PARTIAL
+  FAILED
+}
+
+// -------------------------------------------------------------
+// Authentication Models (NextAuth / Auth.js)
+// -------------------------------------------------------------
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  passwordHash  String?
+  phone         String?
+  role          Role      @default(CUSTOMER)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts  Account[]
+  sessions  Session[]
+  bookings  Booking[]
+  auditLogs AuditLog[]
+
+  @@map("users")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String  @map("user_id")
+  type              String
+  provider          String
+  providerAccountId String  @map("provider_account_id")
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique @map("session_token")
+  userId       String   @map("user_id")
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+// -------------------------------------------------------------
+// Property & Shared Inventory Architecture
+// -------------------------------------------------------------
+
+model Property {
+  id                 String   @id @default(cuid())
+  slug               String   @unique
+  name               String
+  headline           String?
+  description        String   @db.Text
+  address            String
+  city               String
+  state              String
+  country            String   @default("India")
+  postalCode         String
+  latitude           Float?
+  longitude          Float?
+  checkInTime        String   @default("14:00")
+  checkOutTime       String   @default("11:00")
+  houseRules         String?  @db.Text
+  cancellationPolicy String?  @db.Text
+  isActive           Boolean  @default(true)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  inventoryGroups  InventoryGroup[]
+  listingOptions   ListingOption[]
+  images           PropertyImage[]
+  amenities        Amenity[]
+  pricingRules     PricingRule[]
+  bookings         Booking[]
+  externalListings ExternalChannelListing[]
+
+  @@map("properties")
+}
+
+model InventoryGroup {
+  id                 String   @id @default(cuid())
+  propertyId         String   @map("property_id")
+  name               String
+  code               String   @unique
+  totalPhysicalUnits Int      @default(1)
+  description        String?  @db.Text
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  property           Property            @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  listingOptions     ListingOption[]
+  availabilityBlocks AvailabilityBlock[]
+  bookings           Booking[]
+
+  @@index([propertyId])
+  @@map("inventory_groups")
+}
+
+model ListingOption {
+  id                   String   @id @default(cuid())
+  propertyId           String   @map("property_id")
+  inventoryGroupId     String   @map("inventory_group_id")
+  slug                 String   @unique
+  title                String
+  bedroomCount         Int      @default(1)
+  bathroomCount        Int      @default(1)
+  maxGuests            Int      @default(2)
+  basePricePerNight    Decimal  @db.Decimal(10, 2)
+  weekendPricePerNight Decimal? @db.Decimal(10, 2)
+  cleaningFee          Decimal  @default(0.00) @db.Decimal(10, 2)
+  taxPercentage        Decimal  @default(12.00) @db.Decimal(5, 2)
+  description          String   @db.Text
+  summary              String?  @db.Text
+  coverImage           String?
+  isFeatured           Boolean  @default(false)
+  isActive             Boolean  @default(true)
+  sortOrder            Int      @default(0)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  property         Property                 @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  inventoryGroup   InventoryGroup           @relation(fields: [inventoryGroupId], references: [id], onDelete: Cascade)
+  bookings         Booking[]
+  pricingRules     PricingRule[]
+  externalListings ExternalChannelListing[]
+  images           PropertyImage[]
+
+  @@index([propertyId])
+  @@index([inventoryGroupId])
+  @@map("listing_options")
+}
+
+model PropertyImage {
+  id              String   @id @default(cuid())
+  propertyId      String   @map("property_id")
+  listingOptionId String?  @map("listing_option_id")
+  url             String
+  caption         String?
+  category        String?
+  sortOrder       Int      @default(0)
+  isCover         Boolean  @default(false)
+  createdAt       DateTime @default(now())
+
+  property      Property       @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  listingOption ListingOption? @relation(fields: [listingOptionId], references: [id], onDelete: SetNull)
+
+  @@index([propertyId])
+  @@index([listingOptionId])
+  @@map("property_images")
+}
+
+model Amenity {
+  id          String   @id @default(cuid())
+  propertyId  String   @map("property_id")
+  name        String
+  description String?
+  category    String?
+  iconName    String?
+  isFeatured  Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@index([propertyId])
+  @@map("amenities")
+}
+
+model PricingRule {
+  id              String   @id @default(cuid())
+  propertyId      String   @map("property_id")
+  listingOptionId String?  @map("listing_option_id")
+  name            String
+  startDate       DateTime
+  endDate         DateTime
+  pricePerNight   Decimal? @db.Decimal(10, 2)
+  multiplier      Float?
+  minStayNights   Int      @default(1)
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  property      Property       @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  listingOption ListingOption? @relation(fields: [listingOptionId], references: [id], onDelete: SetNull)
+
+  @@index([propertyId])
+  @@index([listingOptionId])
+  @@index([startDate, endDate])
+  @@map("pricing_rules")
+}
+
+// -------------------------------------------------------------
+// Bookings, Holds & Concurrency Protection
+// -------------------------------------------------------------
+
+model Booking {
+  id                 String        @id @default(cuid())
+  bookingReference   String        @unique @map("booking_reference")
+  userId             String?       @map("user_id")
+  propertyId         String        @map("property_id")
+  listingOptionId    String        @map("listing_option_id")
+  inventoryGroupId   String        @map("inventory_group_id")
+  checkInDate        DateTime      @map("check_in_date")
+  checkOutDate       DateTime      @map("check_out_date")
+  nights             Int
+  guestCount         Int           @default(1)
+  adultCount         Int           @default(1)
+  childCount         Int           @default(0)
+  customerName       String        @map("customer_name")
+  customerEmail      String        @map("customer_email")
+  customerPhone      String?       @map("customer_phone")
+  specialRequests    String?       @map("special_requests") @db.Text
+  status             BookingStatus @default(PENDING_HOLD)
+  holdExpiresAt      DateTime?     @map("hold_expires_at")
+  idempotencyKey     String?       @unique @map("idempotency_key")
+  currency           String        @default("INR")
+  baseAmount         Decimal       @map("base_amount") @db.Decimal(10, 2)
+  taxesAmount        Decimal       @default(0.00) @map("taxes_amount") @db.Decimal(10, 2)
+  discountAmount     Decimal       @default(0.00) @map("discount_amount") @db.Decimal(10, 2)
+  totalAmount        Decimal       @map("total_amount") @db.Decimal(10, 2)
+  cancellationReason String?       @map("cancellation_reason") @db.Text
+  cancelledAt        DateTime?     @map("cancelled_at")
+  source             BookingSource @default(DIRECT_WEB)
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+
+  user                 User?                 @relation(fields: [userId], references: [id], onDelete: SetNull)
+  property             Property              @relation(fields: [propertyId], references: [id])
+  listingOption        ListingOption         @relation(fields: [listingOptionId], references: [id])
+  inventoryGroup       InventoryGroup        @relation(fields: [inventoryGroupId], references: [id])
+  guests               BookingGuest[]
+  payments             Payment[]
+  refunds              Refund[]
+  availabilityBlocks   AvailabilityBlock[]
+  externalReservations ExternalReservation[]
+
+  @@index([propertyId])
+  @@index([listingOptionId])
+  @@index([inventoryGroupId])
+  @@index([checkInDate, checkOutDate])
+  @@index([status])
+  @@index([customerEmail])
+  @@map("bookings")
+}
+
+model BookingGuest {
+  id        String   @id @default(cuid())
+  bookingId String   @map("booking_id")
+  fullName  String   @map("full_name")
+  age       Int?
+  idType    String?  @map("id_type")
+  idNumber  String?  @map("id_number")
+  isPrimary Boolean  @default(false) @map("is_primary")
+  createdAt DateTime @default(now())
+
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@index([bookingId])
+  @@map("booking_guests")
+}
+
+model AvailabilityBlock {
+  id               String      @id @default(cuid())
+  inventoryGroupId String      @map("inventory_group_id")
+  bookingId        String?     @map("booking_id")
+  startDate        DateTime    @map("start_date")
+  endDate          DateTime    @map("end_date")
+  reason           BlockReason
+  notes            String?     @db.Text
+  expiresAt        DateTime?   @map("expires_at")
+  createdAt        DateTime    @default(now())
+
+  inventoryGroup InventoryGroup @relation(fields: [inventoryGroupId], references: [id], onDelete: Cascade)
+  booking        Booking?        @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@index([inventoryGroupId])
+  @@index([startDate, endDate])
+  @@index([expiresAt])
+  @@map("availability_blocks")
+}
+
+// -------------------------------------------------------------
+// Payments & Financial Transactions
+// -------------------------------------------------------------
+
+model Payment {
+  id                String        @id @default(cuid())
+  bookingId         String        @map("booking_id")
+  razorpayOrderId   String?       @unique @map("razorpay_order_id")
+  razorpayPaymentId String?       @unique @map("razorpay_payment_id")
+  razorpaySignature String?       @map("razorpay_signature")
+  amount            Decimal       @db.Decimal(10, 2)
+  currency          String        @default("INR")
+  status            PaymentStatus @default(CREATED)
+  method            String?
+  failureReason     String?       @map("failure_reason") @db.Text
+  rawPayload        Json?         @map("raw_payload")
+  verifiedAt        DateTime?     @map("verified_at")
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  booking Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  refunds Refund[]
+
+  @@index([bookingId])
+  @@map("payments")
+}
+
+model Refund {
+  id               String       @id @default(cuid())
+  paymentId        String       @map("payment_id")
+  bookingId        String       @map("booking_id")
+  razorpayRefundId String?      @unique @map("razorpay_refund_id")
+  amount           Decimal      @db.Decimal(10, 2)
+  status           RefundStatus @default(PENDING)
+  reason           String?      @db.Text
+  processedAt      DateTime?    @map("processed_at")
+  createdAt        DateTime     @default(now())
+
+  payment Payment @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@index([paymentId])
+  @@index([bookingId])
+  @@map("refunds")
+}
+
+// -------------------------------------------------------------
+// External Channels & Airbnb Synchronization
+// -------------------------------------------------------------
+
+model ExternalChannel {
+  id                  String      @id @default(cuid())
+  name                String      @default("Airbnb")
+  channelType         ChannelType @default(AIRBNB) @map("channel_type")
+  isActive            Boolean     @default(true) @map("is_active")
+  apiKey              String?     @map("api_key")
+  apiSecret           String?     @map("api_secret")
+  webhookSecret       String?     @map("webhook_secret")
+  syncIntervalMinutes Int         @default(15) @map("sync_interval_minutes")
+  lastSyncedAt        DateTime?   @map("last_synced_at")
+  createdAt           DateTime    @default(now())
+  updatedAt           DateTime    @updatedAt
+
+  externalListings ExternalChannelListing[]
+  syncLogs         SyncLog[]
+
+  @@map("external_channels")
+}
+
+model ExternalChannelListing {
+  id                  String    @id @default(cuid())
+  externalChannelId   String    @map("external_channel_id")
+  propertyId          String    @map("property_id")
+  listingOptionId     String?   @map("listing_option_id")
+  externalListingId   String    @map("external_listing_id")
+  externalListingName String?   @map("external_listing_name")
+  iCalExportToken     String    @unique @default(cuid()) @map("ical_export_token")
+  iCalImportUrl       String?   @map("ical_import_url")
+  syncEnabled         Boolean   @default(true) @map("sync_enabled")
+  lastSyncStatus      String?   @map("last_sync_status")
+  lastSyncMessage     String?   @map("last_sync_message") @db.Text
+  lastSyncedAt        DateTime? @map("last_synced_at")
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  channel              ExternalChannel       @relation(fields: [externalChannelId], references: [id], onDelete: Cascade)
+  property             Property              @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  listingOption        ListingOption?        @relation(fields: [listingOptionId], references: [id], onDelete: SetNull)
+  externalReservations ExternalReservation[]
+
+  @@unique([externalChannelId, externalListingId])
+  @@index([propertyId])
+  @@index([listingOptionId])
+  @@map("external_channel_listings")
+}
+
+model ExternalReservation {
+  id                       String   @id @default(cuid())
+  externalChannelListingId String   @map("external_channel_listing_id")
+  bookingId                String?  @map("booking_id")
+  externalReservationId    String   @unique @map("external_reservation_id")
+  guestName                String   @map("guest_name")
+  guestEmail               String?  @map("guest_email")
+  guestPhone               String?  @map("guest_phone")
+  checkInDate              DateTime @map("check_in_date")
+  checkOutDate             DateTime @map("check_out_date")
+  guestCount               Int      @default(1) @map("guest_count")
+  totalPayout              Decimal? @map("total_payout") @db.Decimal(10, 2)
+  currency                 String   @default("INR")
+  status                   String   @default("CONFIRMED")
+  rawData                  Json?    @map("raw_data")
+  importedAt               DateTime @default(now()) @map("imported_at")
+  updatedAt                DateTime @updatedAt
+
+  externalListing ExternalChannelListing @relation(fields: [externalChannelListingId], references: [id], onDelete: Cascade)
+  booking         Booking?               @relation(fields: [bookingId], references: [id], onDelete: SetNull)
+
+  @@index([externalChannelListingId])
+  @@index([bookingId])
+  @@index([checkInDate, checkOutDate])
+  @@map("external_reservations")
+}
+
+model SyncLog {
+  id                String     @id @default(cuid())
+  externalChannelId String?    @map("external_channel_id")
+  channelListingId  String?    @map("channel_listing_id")
+  syncType          SyncType   @map("sync_type")
+  status            SyncStatus
+  payload           Json?
+  response          Json?
+  errorMessage      String?    @map("error_message") @db.Text
+  durationMs        Int?       @map("duration_ms")
+  createdAt         DateTime   @default(now()) @map("created_at")
+
+  externalChannel ExternalChannel? @relation(fields: [externalChannelId], references: [id], onDelete: SetNull)
+
+  @@index([externalChannelId])
+  @@index([status])
+  @@index([createdAt])
+  @@map("sync_logs")
+}
+
+// -------------------------------------------------------------
+// System Audit Logs
+// -------------------------------------------------------------
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  userId     String?  @map("user_id")
+  userEmail  String?  @map("user_email")
+  action     String
+  entityType String   @map("entity_type")
+  entityId   String?  @map("entity_id")
+  ipAddress  String?  @map("ip_address")
+  userAgent  String?  @map("user_agent")
+  metadata   Json?
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([action])
+  @@index([entityType, entityId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+model WebhookEvent {
+  id          String   @id // Razorpay event ID e.g. "event_..."
+  event       String   // e.g. "payment.captured", "order.paid"
+  payload     Json?
+  processedAt DateTime @default(now())
+
+  @@map("webhook_events")
+}
+
