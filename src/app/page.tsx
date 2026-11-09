@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { auth } from "@/auth";
 import { Header } from "@/components/header";
 import { Hero } from "@/components/hero";
 import { TrustLayer } from "@/components/trust-layer";
@@ -51,9 +52,11 @@ export default async function HomePage() {
       return price < min ? price : min;
     }, 8500) ?? 8500;
 
+  const session = await auth();
+
   return (
     <div className="min-h-screen flex flex-col bg-[#FCFCFC]">
-      <Header />
+      <Header session={session} />
       <main className="overflow-hidden flex-1">
         <Hero
           startingPrice={startingPrice}

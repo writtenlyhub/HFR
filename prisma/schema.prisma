@@ -596,6 +596,7 @@ model ExternalCalendarConnection {
   importUrl           String?          @map("import_url")
   exportToken         String           @unique @default(cuid()) @map("export_token")
   isActive            Boolean          @default(true) @map("is_active")
+  isArchived          Boolean          @default(false) @map("is_archived")
   syncIntervalMinutes Int              @default(15) @map("sync_interval_minutes")
   lastSyncedAt        DateTime?        @map("last_synced_at")
   nextSyncAt          DateTime?        @map("next_sync_at")

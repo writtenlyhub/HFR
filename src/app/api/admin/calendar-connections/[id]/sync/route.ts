@@ -1,10 +1,19 @@
 import { NextResponse } from "next/server";
 import { syncCalendarConnection } from "@/lib/calendar/sync-service";
+import { requireAdminSession } from "@/auth";
 
 export async function POST(
   _request: Request,
   props: { params: Promise<{ id: string }> | { id: string } }
 ) {
+  const authCheck = await requireAdminSession();
+  if (!authCheck.authorized) {
+    return NextResponse.json(
+      { success: false, error: authCheck.error },
+      { status: authCheck.status }
+    );
+  }
+
   try {
     const params = await props.params;
     const { id } = params;

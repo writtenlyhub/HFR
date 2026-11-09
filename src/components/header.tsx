@@ -2,14 +2,27 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Menu, X } from "lucide-react";
+import { Menu, X, User as UserIcon, LogOut, Shield } from "lucide-react";
+import { signOut } from "next-auth/react";
 
-export function Header() {
+interface HeaderProps {
+  session?: {
+    user?: {
+      name?: string | null;
+      email?: string | null;
+      role?: string | null;
+      image?: string | null;
+    } | null;
+  } | null;
+}
+
+export function Header({ session }: HeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const user = session?.user;
 
   return (
     <header
-      className="w-full bg-white/95 backdrop-blur-md sticky top-0 z-50 border-b border-gray-100"
+      className="w-full bg-white/95 backdrop-blur-md sticky top-0 z-50 border-b border-gray-100 font-sans"
       data-purpose="site-header"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 py-3.5 flex items-center justify-between">
@@ -71,8 +84,50 @@ export function Header() {
           </a>
         </nav>
 
-        {/* Primary CTA & Mobile Hamburger */}
+        {/* Primary CTA, Auth State & Mobile Hamburger */}
         <div className="flex items-center gap-3">
+          {/* Admin link if user is ADMIN */}
+          {user?.role === "ADMIN" && (
+            <Link
+              href="/admin/calendar-sync"
+              className="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-50 border border-amber-200/80 text-amber-900 text-[11px] font-semibold uppercase tracking-wider hover:bg-amber-100 transition"
+            >
+              <Shield className="w-3.5 h-3.5 text-amber-700" />
+              <span>Admin Portal</span>
+            </Link>
+          )}
+
+          {/* User Session Action */}
+          {user ? (
+            <div className="hidden sm:flex items-center gap-2 text-xs">
+              <div
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-neutral-100 border border-neutral-200 text-neutral-800 font-medium"
+                title={`Signed in as ${user.email} (${user.role})`}
+              >
+                <div className="w-5 h-5 rounded-full bg-neutral-900 text-white flex items-center justify-center text-[10px] font-bold">
+                  {user.name ? user.name[0].toUpperCase() : "U"}
+                </div>
+                <span className="max-w-[100px] truncate">{user.name || user.email}</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => signOut({ callbackUrl: "/" })}
+                className="p-1.5 rounded-full hover:bg-neutral-100 text-neutral-500 hover:text-neutral-900 transition"
+                title="Sign Out"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
+            </div>
+          ) : (
+            <Link
+              href="/login"
+              className="hidden sm:inline-flex items-center gap-1 px-3.5 py-1.5 rounded-full border border-neutral-300 hover:border-black text-neutral-700 hover:text-black text-xs font-semibold tracking-wider uppercase transition"
+            >
+              <UserIcon className="w-3.5 h-3.5" />
+              <span>Sign In</span>
+            </Link>
+          )}
+
           <a
             className="hidden sm:flex bg-black hover:bg-neutral-800 text-white rounded-full py-2.5 px-5 text-xs font-semibold tracking-wide items-center gap-2 transition-all shadow-sm group"
             href="#sidebar-booking-card"
@@ -96,7 +151,46 @@ export function Header() {
 
       {/* Mobile Drawer */}
       {mobileMenuOpen && (
-        <div className="lg:hidden bg-white border-b border-neutral-200 px-6 py-4 space-y-3">
+        <div className="lg:hidden bg-white border-b border-neutral-200 px-6 py-4 space-y-4">
+          {/* Mobile Auth Bar */}
+          <div className="pb-3 border-b border-neutral-100 flex items-center justify-between text-xs">
+            {user ? (
+              <div className="flex items-center justify-between w-full">
+                <div>
+                  <p className="font-semibold text-neutral-900">{user.name || user.email}</p>
+                  <p className="text-[11px] text-neutral-500 font-mono">
+                    {user.email} · <span className="text-amber-700 font-bold">{user.role}</span>
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  {user.role === "ADMIN" && (
+                    <Link
+                      href="/admin/calendar-sync"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="px-2.5 py-1 rounded bg-amber-50 text-amber-800 border border-amber-200 text-xs font-medium"
+                    >
+                      Admin
+                    </Link>
+                  )}
+                  <button
+                    onClick={() => signOut({ callbackUrl: "/" })}
+                    className="p-1.5 text-neutral-500 hover:text-red-600"
+                  >
+                    <LogOut className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <Link
+                href="/login"
+                onClick={() => setMobileMenuOpen(false)}
+                className="w-full py-2 text-center rounded-lg bg-neutral-100 text-neutral-800 font-semibold"
+              >
+                Sign In to Your Account
+              </Link>
+            )}
+          </div>
+
           <nav className="flex flex-col space-y-2.5 text-xs font-semibold uppercase tracking-wider text-neutral-700">
             <a
               onClick={() => setMobileMenuOpen(false)}
@@ -163,4 +257,5 @@ export function Header() {
     </header>
   );
 }
+
 

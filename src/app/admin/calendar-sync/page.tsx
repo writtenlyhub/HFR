@@ -24,6 +24,7 @@ interface CalendarConnection {
   importUrl: string | null;
   exportToken: string;
   isActive: boolean;
+  isArchived: boolean;
   syncIntervalMinutes: number;
   lastSyncedAt: string | null;
   nextSyncAt: string | null;
@@ -160,7 +161,11 @@ export default function CalendarSyncAdminPage() {
   };
 
   const handleDeleteConnection = async (id: string, name: string) => {
-    if (!confirm(`Are you sure you want to delete "${name}"? This will release its external calendar blocks.`)) {
+    if (
+      !confirm(
+        `Are you sure you want to disconnect "${name}"? The channel feed will be safely archived and all existing reservation blocks on the estate will be preserved to prevent double bookings.`
+      )
+    ) {
       return;
     }
     try {
@@ -169,14 +174,14 @@ export default function CalendarSyncAdminPage() {
       });
       const data = await res.json();
       if (data.success) {
-        setSuccessMsg(`Connection "${name}" deleted.`);
+        setSuccessMsg(data.message || `Connection "${name}" safely disconnected and archived.`);
         await fetchConnections();
       } else {
-        setErrorMsg(data.error || "Failed to delete connection");
+        setErrorMsg(data.error || "Failed to disconnect connection");
       }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
-      setErrorMsg(`Delete failed: ${msg}`);
+      setErrorMsg(`Disconnect failed: ${msg}`);
     }
   };
 
@@ -445,12 +450,14 @@ export default function CalendarSyncAdminPage() {
                       <h3 className="font-semibold text-white text-base">{conn.connectionName}</h3>
                       <span
                         className={`text-xs px-2 py-0.5 rounded font-medium ${
-                          conn.isActive
+                          conn.isArchived
+                            ? "bg-neutral-800 text-neutral-400 border border-neutral-700"
+                            : conn.isActive
                             ? "bg-emerald-950 text-emerald-400 border border-emerald-800"
-                            : "bg-neutral-800 text-neutral-400"
+                            : "bg-amber-950/70 text-amber-400 border border-amber-800"
                         }`}
                       >
-                        {conn.isActive ? "Active" : "Paused"}
+                        {conn.isArchived ? "Archived (Blocks Preserved)" : conn.isActive ? "Active" : "Paused"}
                       </span>
                     </div>
 

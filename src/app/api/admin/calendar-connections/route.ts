@@ -3,8 +3,17 @@ import { prisma } from "@/lib/prisma";
 import { validateCalendarUrl } from "@/lib/calendar/ical-import";
 import { syncCalendarConnection } from "@/lib/calendar/sync-service";
 import { CalendarPlatform } from "@prisma/client";
+import { requireAdminSession } from "@/auth";
 
 export async function GET() {
+  const authCheck = await requireAdminSession();
+  if (!authCheck.authorized) {
+    return NextResponse.json(
+      { success: false, error: authCheck.error },
+      { status: authCheck.status }
+    );
+  }
+
   try {
     const connections = await prisma.externalCalendarConnection.findMany({
       include: {
@@ -37,6 +46,14 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const authCheck = await requireAdminSession();
+  if (!authCheck.authorized) {
+    return NextResponse.json(
+      { success: false, error: authCheck.error },
+      { status: authCheck.status }
+    );
+  }
+
   try {
     const body = await request.json();
     const {
@@ -88,22 +105,57 @@ export async function POST(request: Request) {
       }
     }
 
-    const connection = await prisma.externalCalendarConnection.create({
-      data: {
-        inventoryGroupId: targetInventoryGroupId,
-        listingOptionId: listingOptionId || null,
-        platform: platform as CalendarPlatform,
-        connectionName: connectionName.trim(),
-        externalListingId: externalListingId || null,
-        importUrl: importUrl ? importUrl.trim() : null,
-        syncIntervalMinutes: Math.max(5, parseInt(String(syncIntervalMinutes), 10) || 15),
-        isActive: true,
-      },
-      include: {
-        inventoryGroup: true,
-        listingOption: true,
-      },
-    });
+    const cleanImportUrl = importUrl ? importUrl.trim() : null;
+
+    // Check if an archived connection with this importUrl already exists to reactivate without duplicate blocks
+    let connection;
+    const existingArchived = cleanImportUrl
+      ? await prisma.externalCalendarConnection.findFirst({
+          where: {
+            importUrl: cleanImportUrl,
+            isArchived: true,
+          },
+        })
+      : null;
+
+    if (existingArchived) {
+      connection = await prisma.externalCalendarConnection.update({
+        where: { id: existingArchived.id },
+        data: {
+          connectionName: connectionName.trim(),
+          platform: platform as CalendarPlatform,
+          inventoryGroupId: targetInventoryGroupId,
+          listingOptionId: listingOptionId || null,
+          externalListingId: externalListingId || null,
+          syncIntervalMinutes: Math.max(5, parseInt(String(syncIntervalMinutes), 10) || 15),
+          isActive: true,
+          isArchived: false,
+          lastSyncError: null,
+        },
+        include: {
+          inventoryGroup: true,
+          listingOption: true,
+        },
+      });
+    } else {
+      connection = await prisma.externalCalendarConnection.create({
+        data: {
+          inventoryGroupId: targetInventoryGroupId,
+          listingOptionId: listingOptionId || null,
+          platform: platform as CalendarPlatform,
+          connectionName: connectionName.trim(),
+          externalListingId: externalListingId || null,
+          importUrl: cleanImportUrl,
+          syncIntervalMinutes: Math.max(5, parseInt(String(syncIntervalMinutes), 10) || 15),
+          isActive: true,
+          isArchived: false,
+        },
+        include: {
+          inventoryGroup: true,
+          listingOption: true,
+        },
+      });
+    }
 
     let initialSyncResult = null;
     if (autoSync && connection.importUrl) {

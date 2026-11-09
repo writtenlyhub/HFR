@@ -1,7 +1,16 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { requireAdminSession } from "@/auth";
 
 export async function GET() {
+  const authCheck = await requireAdminSession();
+  if (!authCheck.authorized) {
+    return NextResponse.json(
+      { success: false, error: authCheck.error },
+      { status: authCheck.status }
+    );
+  }
+
   try {
     const conflictLogs = await prisma.auditLog.findMany({
       where: { action: "CALENDAR_SYNC_CONFLICT_DETECTED" },

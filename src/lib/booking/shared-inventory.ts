@@ -138,14 +138,30 @@ export async function cleanupExpiredHolds(): Promise<number> {
   return expiredBookings.length;
 }
 
+let lastCleanupTimestamp = 0;
+
+/**
+ * Throttled cleanup of expired holds to avoid sequential database roundtrips
+ * on high-frequency availability check queries.
+ */
+export async function throttledCleanupExpiredHolds(minIntervalMs = 30000): Promise<number> {
+  const now = Date.now();
+  if (now - lastCleanupTimestamp < minIntervalMs) {
+    return 0;
+  }
+  lastCleanupTimestamp = now;
+  return cleanupExpiredHolds();
+}
+
 /**
  * Checks availability against PostgreSQL shared inventory rules.
+ * Optimized to minimize sequential roundtrips while preserving exact shared inventory constraints.
  */
 export async function checkAvailability(
   params: CheckAvailabilityParams
 ): Promise<AvailabilityResult> {
-  // First, prune any stale expired holds
-  await cleanupExpiredHolds();
+  // Prune stale holds in a throttled manner
+  await throttledCleanupExpiredHolds();
 
   const checkIn = normalizeDate(params.checkInDate);
   const checkOut = normalizeDate(params.checkOutDate);
@@ -161,16 +177,28 @@ export async function checkAvailability(
     };
   }
 
-  // 1. Fetch Property & all configurations
+  // 1. Fetch Property & active configurations with lean projection
   const property = await prisma.property.findFirst({
     where: params.propertyId
       ? { id: params.propertyId }
       : { slug: params.propertySlug || "dev-stays-jaipur" },
-    include: {
-      inventoryGroups: true,
+    select: {
+      id: true,
+      inventoryGroups: { select: { id: true } },
       listingOptions: {
         where: { isActive: true },
         orderBy: { sortOrder: "asc" },
+        select: {
+          id: true,
+          slug: true,
+          title: true,
+          maxGuests: true,
+          bedroomCount: true,
+          bathroomCount: true,
+          basePricePerNight: true,
+          cleaningFee: true,
+          taxPercentage: true,
+        },
       },
     },
   });

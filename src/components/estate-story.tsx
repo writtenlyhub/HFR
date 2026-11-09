@@ -122,6 +122,18 @@ export function EstateStory({ amenities, listingOptions }: EstateStoryProps) {
   const [confirmedBooking, setConfirmedBooking] = useState<ConfirmedBookingDetails | null>(null);
   const [copiedRef, setCopiedRef] = useState(false);
 
+  // Listen for selection events from accommodation cards
+  useEffect(() => {
+    const handleConfigSelect = (e: Event) => {
+      const customEvent = e as CustomEvent<{ slug: string }>;
+      if (customEvent.detail?.slug) {
+        setSelectedConfigSlug(customEvent.detail.slug);
+      }
+    };
+    window.addEventListener("select-configuration", handleConfigSelect);
+    return () => window.removeEventListener("select-configuration", handleConfigSelect);
+  }, []);
+
   // Live availability check effect
   useEffect(() => {
     let ignore = false;

@@ -91,3 +91,14 @@ export function initHoldWorker(): Worker<HoldJobData> {
   }
   return holdWorker;
 }
+
+/**
+ * Closes the BullMQ hold expiration worker gracefully.
+ */
+export async function closeHoldWorker(): Promise<void> {
+  if (holdWorker) {
+    await holdWorker.close();
+    holdWorker = null;
+  }
+}
+

@@ -1,3 +1,5 @@
+"use client";
+
 interface ListingOptionData {
   id: string;
   slug: string;
@@ -20,7 +22,21 @@ interface AccommodationsProps {
   onSelectOption?: (slug: string) => void;
 }
 
-export function Accommodations({ options }: AccommodationsProps) {
+export function Accommodations({ options, onSelectOption }: AccommodationsProps) {
+  const handleSelect = (slug: string) => {
+    if (onSelectOption) {
+      onSelectOption(slug);
+    }
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(
+        new CustomEvent("select-configuration", { detail: { slug } })
+      );
+      const target = document.getElementById("sidebar-booking-card");
+      if (target) {
+        target.scrollIntoView({ behavior: "smooth" });
+      }
+    }
+  };
   return (
     <section
       className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 py-12"
@@ -117,13 +133,14 @@ export function Accommodations({ options }: AccommodationsProps) {
 
               {/* Action */}
               <div className="px-2 pt-6 mt-auto">
-                <a
-                  className="w-full py-3.5 bg-black hover:bg-neutral-800 text-white text-xs uppercase tracking-wider font-semibold rounded-full transition-all shadow-sm flex items-center justify-center gap-2 group-hover:gap-3"
-                  href={`#sidebar-booking-card`}
+                <button
+                  type="button"
+                  onClick={() => handleSelect(opt.slug)}
+                  className="w-full py-3.5 bg-black hover:bg-neutral-800 text-white text-xs uppercase tracking-wider font-semibold rounded-full transition-all shadow-sm flex items-center justify-center gap-2 group-hover:gap-3 cursor-pointer"
                 >
                   <span>{buttonText}</span>
                   <span>→</span>
-                </a>
+                </button>
               </div>
             </div>
           );
