@@ -5,7 +5,10 @@ interface ListingOptionData {
   bedroomCount: number;
   bathroomCount: number;
   maxGuests: number;
-  basePricePerNight: number | string | unknown;
+  basePricePerNight: number;
+  weekendPricePerNight?: number | null;
+  cleaningFee?: number;
+  taxPercentage?: number;
   summary: string | null;
   description: string;
   coverImage: string | null;

@@ -90,3 +90,4 @@ export async function closeCalendarWorker(): Promise<void> {
     calendarWorker = null;
   }
 }
+

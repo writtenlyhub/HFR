@@ -33,10 +33,21 @@ export default async function HomePage() {
     },
   });
 
+  // Serialize listingOptions to plain objects (converting Prisma Decimals to JavaScript numbers)
+  // so they can be safely passed across the Server Component -> Client Component boundary.
+  const serializedListingOptions =
+    property?.listingOptions.map((opt) => ({
+      ...opt,
+      basePricePerNight: Number(opt.basePricePerNight),
+      weekendPricePerNight: opt.weekendPricePerNight ? Number(opt.weekendPricePerNight) : null,
+      cleaningFee: Number(opt.cleaningFee),
+      taxPercentage: Number(opt.taxPercentage),
+    })) ?? [];
+
   // Calculate dynamic starting price from active configurations
   const startingPrice =
-    property?.listingOptions.reduce((min, opt) => {
-      const price = Number(opt.basePricePerNight);
+    serializedListingOptions.reduce((min, opt) => {
+      const price = opt.basePricePerNight;
       return price < min ? price : min;
     }, 8500) ?? 8500;
 
@@ -54,17 +65,15 @@ export default async function HomePage() {
         />
         <TrustLayer />
         <PhotoGallery images={property?.images ?? []} />
-        <Accommodations options={property?.listingOptions ?? []} />
+        <Accommodations options={serializedListingOptions} />
         <EstateStory
           amenities={property?.amenities ?? []}
-          listingOptions={
-            property?.listingOptions.map((o) => ({
-              id: o.id,
-              slug: o.slug,
-              title: o.title,
-              basePricePerNight: o.basePricePerNight,
-            })) ?? []
-          }
+          listingOptions={serializedListingOptions.map((o) => ({
+            id: o.id,
+            slug: o.slug,
+            title: o.title,
+            basePricePerNight: o.basePricePerNight,
+          }))}
         />
         <GuestReviews />
         <LocationSection />

@@ -97,3 +97,4 @@ export async function closeCalendarQueue(): Promise<void> {
     calendarQueue = null;
   }
 }
+

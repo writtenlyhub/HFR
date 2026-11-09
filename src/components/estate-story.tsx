@@ -24,7 +24,7 @@ interface ListingConfigBrief {
   id: string;
   slug: string;
   title: string;
-  basePricePerNight: number | string | unknown;
+  basePricePerNight: number;
 }
 
 interface EstateStoryProps {
