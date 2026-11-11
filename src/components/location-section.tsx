@@ -1,17 +1,115 @@
+"use client";
+
+import { useState } from "react";
+import dynamic from "next/dynamic";
+import type { Landmark } from "./interactive-location-map";
+
+// Dynamically import InteractiveLocationMap with ssr: false to support Leaflet
+const InteractiveLocationMap = dynamic(
+  () => import("./interactive-location-map"),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="relative w-full h-[400px] sm:h-[500px] rounded-3xl overflow-hidden border border-neutral-200 bg-stone-100 flex items-center justify-center">
+        <div className="flex flex-col items-center gap-2 text-neutral-500">
+          <span className="w-6 h-6 border-2 border-neutral-400 border-t-transparent rounded-full animate-spin"></span>
+          <span className="text-xs font-semibold">Loading interactive map...</span>
+        </div>
+      </div>
+    ),
+  }
+);
+
 export function LocationSection() {
-  const landmarks = [
-    { name: "Cafes & Street Food Lanes", time: "2 Mins Walk", icon: "local_cafe" },
-    { name: "Birla Mandir & Temples", time: "~5 Mins Drive", icon: "temple_hindu" },
-    { name: "MI Road (Shopping & Food)", time: "~8–10 Mins Drive", icon: "shopping_bag" },
-    { name: "Hawa Mahal", time: "~12 Mins Drive", icon: "castle" },
-    { name: "City Palace Jaipur", time: "~14 Mins Drive", icon: "fort" },
-    { name: "Jaipur Railway Station", time: "~15 Mins Drive", icon: "train" },
+  const landmarks: Landmark[] = [
     {
+      id: "cafes",
+      name: "Cafes & Street Food Lanes",
+      time: "2 Mins Walk",
+      distance: "200 m",
+      mode: "walk",
+      icon: "local_cafe",
+      coords: [26.8936, 75.8288],
+      description:
+        "Lively local bakeries, sweet shops, specialty chai stalls & trendy cafes along Raja Park market lanes.",
+    },
+    {
+      id: "birla-mandir",
+      name: "Birla Mandir & Temples",
+      time: "~5 Mins Drive",
+      distance: "1.8 km",
+      mode: "drive",
+      icon: "temple_hindu",
+      coords: [26.8923, 75.8152],
+      description:
+        "Iconic white marble temple beneath Moti Dungri Fort, beautifully illuminated at sunset.",
+    },
+    {
+      id: "mi-road",
+      name: "MI Road (Shopping & Food)",
+      time: "~8–10 Mins Drive",
+      distance: "3.2 km",
+      mode: "drive",
+      icon: "shopping_bag",
+      coords: [26.9155, 75.813],
+      description:
+        "Jaipur's historic shopping boulevard with jewellers, block-print textiles, and the legendary Lassiwala.",
+    },
+    {
+      id: "hawa-mahal",
+      name: "Hawa Mahal (Palace of Winds)",
+      time: "~12 Mins Drive",
+      distance: "4.1 km",
+      mode: "drive",
+      icon: "castle",
+      coords: [26.9239, 75.8267],
+      description:
+        "Iconic 5-storey pink sandstone facade featuring 953 ornate honeycomb jharokhas.",
+    },
+    {
+      id: "city-palace",
+      name: "City Palace Jaipur",
+      time: "~14 Mins Drive",
+      distance: "4.6 km",
+      mode: "drive",
+      icon: "fort",
+      coords: [26.9258, 75.8236],
+      description:
+        "Royal palace complex with courtyards, museums, and the current residence of Jaipur's royal family.",
+    },
+    {
+      id: "railway-station",
+      name: "Jaipur Railway Station",
+      time: "~15 Mins Drive",
+      distance: "5.8 km",
+      mode: "drive",
+      icon: "train",
+      coords: [26.92, 75.7878],
+      description:
+        "Jaipur Junction Railway Station connecting all major Indian express and Shatabdi train routes.",
+    },
+    {
+      id: "airport",
       name: "Jaipur International Airport (≈9 km)",
       time: "~15–25 Mins Drive",
+      distance: "9.2 km",
+      mode: "drive",
       icon: "flight",
+      coords: [26.8289, 75.8056],
+      description:
+        "Direct domestic & international terminal in Sanganer (~9 km south of Raja Park with fast expressway connectivity).",
     },
   ];
+
+  const [selectedLandmark, setSelectedLandmark] = useState<Landmark | null>(null);
+
+  const handleToggleLandmark = (l: Landmark) => {
+    if (selectedLandmark?.id === l.id) {
+      setSelectedLandmark(null);
+    } else {
+      setSelectedLandmark(l);
+    }
+  };
 
   return (
     <section
@@ -41,23 +139,59 @@ export function LocationSection() {
             </p>
           </div>
 
-          <div className="space-y-2 pt-1 max-h-[290px] overflow-y-auto pr-1">
-            {landmarks.map((l) => (
-              <div
-                key={l.name}
-                className="flex items-center justify-between p-2.5 rounded-xl bg-white border border-neutral-200 shadow-2xs"
-              >
-                <div className="flex items-center gap-2.5 text-xs font-semibold text-neutral-800">
-                  <span className="material-symbols-outlined text-[17px] text-neutral-700">
-                    {l.icon}
-                  </span>
-                  <span>{l.name}</span>
-                </div>
-                <span className="text-xs font-bold text-neutral-900 shrink-0 ml-2">
-                  {l.time}
-                </span>
-              </div>
-            ))}
+          {/* Interactive Landmark List */}
+          <div className="space-y-2 pt-1 max-h-[300px] overflow-y-auto pr-1">
+            <div className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wider mb-1 flex items-center justify-between">
+              <span>Nearby Attractions &amp; Distances</span>
+              <span className="text-[10px] text-amber-700 font-bold lowercase">
+                click to view route
+              </span>
+            </div>
+
+            {landmarks.map((l) => {
+              const isSelected = selectedLandmark?.id === l.id;
+              return (
+                <button
+                  type="button"
+                  key={l.id}
+                  onClick={() => handleToggleLandmark(l)}
+                  className={`w-full text-left flex items-center justify-between p-2.5 rounded-xl border transition-all cursor-pointer ${
+                    isSelected
+                      ? "bg-amber-50/80 border-amber-300 ring-2 ring-amber-300/50 shadow-sm"
+                      : "bg-white hover:bg-neutral-50 border-neutral-200 shadow-2xs"
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5 text-xs font-semibold text-neutral-800">
+                    <span
+                      className={`material-symbols-outlined text-[17px] ${
+                        isSelected ? "text-amber-700" : "text-neutral-700"
+                      }`}
+                    >
+                      {l.icon}
+                    </span>
+                    <span className={isSelected ? "text-amber-900 font-bold" : ""}>
+                      {l.name}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0 ml-2">
+                    <span
+                      className={`text-xs font-bold ${
+                        isSelected ? "text-amber-900" : "text-neutral-900"
+                      }`}
+                    >
+                      {l.time}
+                    </span>
+                    <span
+                      className={`text-[11px] transition-transform ${
+                        isSelected ? "text-amber-600 rotate-90" : "text-neutral-400"
+                      }`}
+                    >
+                      →
+                    </span>
+                  </div>
+                </button>
+              );
+            })}
           </div>
 
           <div className="p-3.5 rounded-2xl bg-[#FCFCFC] border border-neutral-200 text-xs text-neutral-700">
@@ -69,52 +203,15 @@ export function LocationSection() {
           </div>
         </div>
 
-        {/* Right column: Interactive Location Map */}
+        {/* Right column: Interactive Location Map with Route & Timing */}
         <div className="lg:col-span-7">
-          <div className="relative w-full h-[380px] sm:h-[480px] rounded-3xl overflow-hidden border border-neutral-200 shadow-sm bg-neutral-100">
-            {/* Embedded Interactive Map */}
-            <iframe
-              title="Dev Stays Location in Raja Park, Jaipur"
-              src="https://www.openstreetmap.org/export/embed.html?bbox=75.8170%2C26.8840%2C75.8370%2C26.9010&layer=mapnik&marker=26.8928%2C75.8270"
-              width="100%"
-              height="100%"
-              style={{ border: 0 }}
-              className="w-full h-full"
-            />
-
-            {/* Floating Location Badge */}
-            <div className="absolute top-4 left-4 z-10 bg-white/95 backdrop-blur-md px-3.5 py-2.5 rounded-2xl shadow-md border border-neutral-200 flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-neutral-900 text-white flex items-center justify-center shrink-0">
-                <span className="material-symbols-outlined text-[18px]">home</span>
-              </div>
-              <div>
-                <div className="text-xs font-bold text-neutral-900 leading-tight">
-                  Dev Stays · Raja Park
-                </div>
-                <div className="text-[10px] text-neutral-500 font-medium">
-                  Central Jaipur, Rajasthan 302004
-                </div>
-              </div>
-              <a
-                href="https://maps.google.com/?q=Raja+Park+Jaipur+Rajasthan+302004"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="ml-1 bg-neutral-100 hover:bg-neutral-200 text-neutral-800 text-[10px] font-semibold px-2.5 py-1 rounded-full transition-colors flex items-center gap-1"
-              >
-                <span>Directions</span>
-                <span>↗</span>
-              </a>
-            </div>
-
-            {/* Bottom info indicator */}
-            <div className="absolute bottom-3 left-4 z-10 bg-white/90 backdrop-blur-md px-3 py-1 rounded-full text-[10px] text-neutral-600 font-medium shadow-xs border border-neutral-200/80 flex items-center gap-1.5 pointer-events-none">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-              <span>Interactive Map · Raja Park, Central Jaipur</span>
-            </div>
-          </div>
+          <InteractiveLocationMap
+            landmarks={landmarks}
+            selectedLandmark={selectedLandmark}
+            onSelectLandmark={setSelectedLandmark}
+          />
         </div>
       </div>
     </section>
   );
 }
-
