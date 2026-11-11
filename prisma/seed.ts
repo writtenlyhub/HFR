@@ -38,7 +38,7 @@ async function main() {
   const propertyData = {
     slug: "dev-stays-jaipur",
     name: "Dev Stays Jaipur",
-    headline: "Your own private 3BHK villa in Central Jaipur (Raja Park)",
+    headline: "Your own private 3BHK villa in Central Jaipur",
     description:
       "Your own private 3BHK villa in Central Jaipur (Raja Park) - 3 king bedrooms, 3 bathrooms, a large living room, full kitchen, dining area, veranda & parking for 3-4 cars. Every corner is handcrafted with Rajasthani textiles, crochet details & curated decor. Celebrations, small events & get-togethers are welcome. Priced for 6 guests; message us to host up to 15. Walkable to cafes & 10-25 mins to main attractions. Pet friendly. Board games available.",
     address: "Raja Park",

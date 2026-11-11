@@ -8,7 +8,7 @@ interface HeroProps {
 export function Hero({
   startingPrice = 8500,
   headline = "YOUR OWN PRIVATE 3BHK VILLA IN CENTRAL JAIPUR",
-  description = "Dev Stays (@devstays.jaipur) in Raja Park: 3 king bedrooms, 3 bathrooms, large living room, full kitchen, dining area, front veranda & parking for 3-4 cars. Handcrafted with Rajasthani textiles, crochet details & curated decor.",
+  description = "A private 3BHK villa handcrafted with Rajasthani textiles, crochet details, and curated decor. Your peaceful sanctuary in Raja Park — no shared spaces, no other guests.",
 }: HeroProps) {
   const formattedPrice = "₹" + startingPrice.toLocaleString("en-IN");
 
@@ -41,11 +41,6 @@ export function Hero({
 
         {/* Hero Content */}
         <div className="relative z-10 max-w-3xl pt-2">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-[11px] font-semibold tracking-wider uppercase text-stone-200 mb-4">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-            <span>Raja Park · Central Jaipur · No Shared Spaces</span>
-          </div>
-
           <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold uppercase leading-[1.08] tracking-tight mb-4 font-sans">
             {headline}
           </h1>
@@ -54,21 +49,21 @@ export function Hero({
           </p>
 
           {/* Feature Badges */}
-          <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs sm:text-sm text-stone-200 mb-8 font-medium">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-2.5 text-xs text-stone-200 mb-8 font-medium">
             <span className="px-3 py-1.5 rounded-lg bg-white/10 backdrop-blur-md border border-white/10">
-              3 King Bedrooms · 3 Attached Baths
+              3 King Bedrooms
             </span>
             <span className="text-white/40">•</span>
             <span className="px-3 py-1.5 rounded-lg bg-white/10 backdrop-blur-md border border-white/10">
-              Priced for 6 · Hosts up to 15
+              Priced for 6 (Hosts up to 15)
             </span>
             <span className="text-white/40">•</span>
             <span className="px-3 py-1.5 rounded-lg bg-white/10 backdrop-blur-md border border-white/10">
-              Veranda & Parking for 3-4 Cars
+              Private Veranda &amp; Parking
             </span>
             <span className="text-white/40">•</span>
             <span className="px-3 py-1.5 rounded-lg bg-white/10 backdrop-blur-md border border-white/10">
-              Pet Friendly · Full Kitchen
+              Pet Friendly
             </span>
           </div>
 

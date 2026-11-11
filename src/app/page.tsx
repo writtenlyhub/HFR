@@ -60,14 +60,8 @@ export default async function HomePage() {
       <main className="overflow-hidden flex-1">
         <Hero
           startingPrice={startingPrice}
-          headline={
-            property?.headline?.toUpperCase() ??
-            "YOUR OWN PRIVATE 3BHK VILLA IN CENTRAL JAIPUR"
-          }
-          description={
-            property?.description ??
-            "Dev Stays (@devstays.jaipur) in Raja Park: 3 king bedrooms, 3 bathrooms, large living room, full kitchen, dining area, front veranda & parking for 3-4 cars. Handcrafted with Rajasthani textiles, crochet details & curated decor."
-          }
+          headline="YOUR OWN PRIVATE 3BHK VILLA IN CENTRAL JAIPUR"
+          description="A private 3BHK villa handcrafted with Rajasthani textiles, crochet details, and curated decor. Your peaceful sanctuary in Raja Park — no shared spaces, no other guests."
         />
         <TrustLayer />
         <PhotoGallery images={property?.images ?? []} />
