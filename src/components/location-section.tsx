@@ -69,26 +69,47 @@ export function LocationSection() {
           </div>
         </div>
 
-        {/* Right column: Styled Map */}
+        {/* Right column: Interactive Location Map */}
         <div className="lg:col-span-7">
-          <div className="relative w-full h-[380px] sm:h-[460px] rounded-3xl overflow-hidden border border-neutral-200 shadow-sm bg-neutral-200">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/images/exterior/85623348-92e6-4ea3-9185-a80f57f90c47.avif"
-              alt="Dev Stays Jaipur Villa Facade & Enclave Location"
-              className="w-full h-full object-cover"
+          <div className="relative w-full h-[380px] sm:h-[480px] rounded-3xl overflow-hidden border border-neutral-200 shadow-sm bg-neutral-100">
+            {/* Embedded Interactive Map */}
+            <iframe
+              title="Dev Stays Location in Raja Park, Jaipur"
+              src="https://www.openstreetmap.org/export/embed.html?bbox=75.8170%2C26.8840%2C75.8370%2C26.9010&layer=mapnik&marker=26.8928%2C75.8270"
+              width="100%"
+              height="100%"
+              style={{ border: 0 }}
+              className="w-full h-full"
             />
-            <div className="absolute inset-0 bg-neutral-900/10 pointer-events-none"></div>
 
-            {/* Pulsing Location Marker */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 flex flex-col items-center">
-              <div className="w-16 h-16 rounded-full bg-neutral-900/20 animate-ping absolute -top-1"></div>
-              <div className="w-14 h-14 rounded-full bg-neutral-900 text-white flex items-center justify-center shadow-2xl border-4 border-white">
-                <span className="material-symbols-outlined text-2xl">home</span>
+            {/* Floating Location Badge */}
+            <div className="absolute top-4 left-4 z-10 bg-white/95 backdrop-blur-md px-3.5 py-2.5 rounded-2xl shadow-md border border-neutral-200 flex items-center gap-3">
+              <div className="w-8 h-8 rounded-full bg-neutral-900 text-white flex items-center justify-center shrink-0">
+                <span className="material-symbols-outlined text-[18px]">home</span>
               </div>
-              <div className="mt-2 bg-white/95 px-3.5 py-1 rounded-full text-[10px] font-bold tracking-wider text-black shadow-md border border-neutral-100 uppercase whitespace-nowrap">
-                Dev Stays · Raja Park
+              <div>
+                <div className="text-xs font-bold text-neutral-900 leading-tight">
+                  Dev Stays · Raja Park
+                </div>
+                <div className="text-[10px] text-neutral-500 font-medium">
+                  Central Jaipur, Rajasthan 302004
+                </div>
               </div>
+              <a
+                href="https://maps.google.com/?q=Raja+Park+Jaipur+Rajasthan+302004"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="ml-1 bg-neutral-100 hover:bg-neutral-200 text-neutral-800 text-[10px] font-semibold px-2.5 py-1 rounded-full transition-colors flex items-center gap-1"
+              >
+                <span>Directions</span>
+                <span>↗</span>
+              </a>
+            </div>
+
+            {/* Bottom info indicator */}
+            <div className="absolute bottom-3 left-4 z-10 bg-white/90 backdrop-blur-md px-3 py-1 rounded-full text-[10px] text-neutral-600 font-medium shadow-xs border border-neutral-200/80 flex items-center gap-1.5 pointer-events-none">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span>Interactive Map · Raja Park, Central Jaipur</span>
             </div>
           </div>
         </div>
