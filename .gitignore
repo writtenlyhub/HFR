@@ -43,5 +43,8 @@ next-env.d.ts
 # Redis snapshot dump
 dump.rdb
 
+# Raw image staging
+Img/
+
 # Keep .env.example
 !.env.example

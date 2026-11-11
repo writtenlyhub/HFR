@@ -65,8 +65,8 @@ export function LocationSection() {
           <div className="relative w-full h-[380px] sm:h-[440px] rounded-3xl overflow-hidden border border-neutral-200 shadow-sm bg-neutral-200">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuDrc75pUMuZRzly8KtYr85K0ZbDSRhjTb2MWKIvNzohhc6n2Wue6N3McWmq5P_zFIym85OnUd8Md-gnbAzi9TrZSpSAMk8VDwrnnQ7tmXuH2-55iVO1vftNuxWQ4t2qUIQPPx1Hyvx9W9L9tWyYdrJhFoAudfbEhRCkhNMXfRAZXVQnapGjAs2gUW5fDMJoNMy12iIzFT5lo960UWDdoZMQStNPjJl6nlXOSv1xkh0"
-              alt="Map of Jaipur Enclave"
+              src="/images/exterior/85623348-92e6-4ea3-9185-a80f57f90c47.avif"
+              alt="Dev Stays Jaipur Villa Facade & Enclave Location"
               className="w-full h-full object-cover"
             />
             <div className="absolute inset-0 bg-neutral-900/10 pointer-events-none"></div>

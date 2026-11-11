@@ -27,7 +27,7 @@ export function Hero({
             loop
             muted
             playsInline
-            poster="https://lh3.googleusercontent.com/aida-public/AB6AXuD6kKrBTsXZaKC8ruztoO_cLuYvZO__CnPz3lwZNOa3p6OzHrHTyhfA_36D7SgQ-7GJPTiO1KD4AjOsd8AxCVV-uEMvUmE5PaV8OXVXVXh3wa3tvDgbVzepDabRFO_mXvklA5Nb-1sNdEsWLg3WQTjyYN5aCgyQrRrurQHYgZta_OeB2Rzi-PJimECEiAWcVfx8TWVfS8Y7qLYTRr3fZdTvqInYcHycLxTn1ePwBcg"
+            poster="/images/living-room/imgi_491_9b8ea86b-c2d1-4327-a5dc-0204663820d1.jpg"
           >
             <source
               src="https://assets.mixkit.co/videos/preview/mixkit-luxury-villa-exterior-with-pool-at-sunset-42867-large.mp4"

@@ -15,36 +15,36 @@ interface PhotoGalleryProps {
 }
 
 export function PhotoGallery({ images = [] }: PhotoGalleryProps) {
-  // Default fallback images if not in db
+  // Default fallback images with authentic property photography
   const defaultGallery: GalleryImage[] = [
     {
       id: "1",
-      url: "https://lh3.googleusercontent.com/aida-public/AB6AXuD6kKrBTsXZaKC8ruztoO_cLuYvZO__CnPz3lwZNOa3p6OzHrHTyhfA_36D7SgQ-7GJPTiO1KD4AjOsd8AxCVV-uEMvUmE5PaV8OXVXVXh3wa3tvDgbVzepDabRFO_mXvklA5Nb-1sNdEsWLg3WQTjyYN5aCgyQrRrurQHYgZta_OeB2Rzi-PJimECEiAWcVfx8TWVfS8Y7qLYTRr3fZdTvqInYcHycLxTn1ePwBcg",
-      caption: "Courtyard Plunge Pool & Sandstone Colonnade",
-      category: "pool",
+      url: "/images/living-room/imgi_491_9b8ea86b-c2d1-4327-a5dc-0204663820d1.jpg",
+      caption: "Grand Living Salon with Rajasthani Crafts & Archways",
+      category: "living",
     },
     {
       id: "2",
-      url: "https://lh3.googleusercontent.com/aida-public/AB6AXuDVgof0d5ixzAAMrLi6YrVh8RzOyfFeT6oGtCCsleXEnSx4709BcNT2HmUx_jWw0dnYVSBzNbwgacN9uo4wMVl7sNz1QCsedJCGKd1T3xasQRPKJ7NIGC4YstTvQLT4kBCloK54v6ra1_Vg-TigJRiKOOvL7ziHN_bBv2fZqOy_6MNfklkmV2jGD400Z-gGnkOeX7stKN6YBm_ZmDO8GkyiMq3prSQ46qoLwGI452U",
-      caption: "Master Bedroom Suite with Teak Furnishings",
+      url: "/images/bedroom-1/imgi_415_8378c683-e395-419a-87b9-e764d4d7a670.jpg",
+      caption: "Main Bedroom Suite King Bed & Teak Accents",
       category: "bedroom",
     },
     {
       id: "3",
-      url: "https://lh3.googleusercontent.com/aida-public/AB6AXuABDvjL5jP8JPbuETy4O7r5cnT95XNp-Rat1g36gtyXwMRMolmnltNPtoe1L3___s1K6qphNBILWEjx1cAb1JTv9C_8zCWlttMQBglhGEih1XYmYYAH3QHOJj6EXfd8hwCcoTeGUu3tS5eLCP-4eHzLTeT-p9oY4smkfG21szCNlomtVhXgPCKo-GRuY-VSZSO47E-z-bhsLN3gsIrq2bdSa32TbtuPn8CboxpvmB4",
-      caption: "Living Salon with Rajasthani Crafts & Library",
-      category: "living",
-    },
-    {
-      id: "4",
-      url: "https://lh3.googleusercontent.com/aida-public/AB6AXuD5zsMfWqrfve2fmYWN_cYW2Jc0ehxDCIMJVn6ez27fzGQtMi1OdkAnVs6gc3dltaWVPZuAMrghILwZ3m5KrCu9R2rFbFxq-SGHSXwgswFbYVnGbfjH1VO2LBESVe_g5n_tt8EdzFAde0z7htZLwcmNBr0J4_xDYUSuc_t9inrS5JxuERyi2zkz-Rew4w9BfUeOYkJ8SZBaAMBVKRXMWiya6YQxKCOgEN8MttQNtpY",
-      caption: "Dining Hall & Chef Kitchen",
+      url: "/images/dining/imgi_67_1ea5b444-ee63-4a50-aff9-d7dbe31eceb2.jpg",
+      caption: "Heritage Dining Hall & Colonnade",
       category: "dining",
     },
     {
+      id: "4",
+      url: "/images/kitchen/imgi_6_48052375-3227-4ddc-bb6f-51b650b76963.jpg",
+      caption: "Modern Chef Kitchen with Full Amenities",
+      category: "kitchen",
+    },
+    {
       id: "5",
-      url: "https://lh3.googleusercontent.com/aida-public/AB6AXuDrc75pUMuZRzly8KtYr85K0ZbDSRhjTb2MWKIvNzohhc6n2Wue6N3McWmq5P_zFIym85OnUd8Md-gnbAzi9TrZSpSAMk8VDwrnnQ7tmXuH2-55iVO1vftNuxWQ4t2qUIQPPx1Hyvx9W9L9tWyYdrJhFoAudfbEhRCkhNMXfRAZXVQnapGjAs2gUW5fDMJoNMy12iIzFT5lo960UWDdoZMQStNPjJl6nlXOSv1xkh0",
-      caption: "Architectural Colonnades & Terraces",
+      url: "/images/patio/2544fbd9-3035-4426-878d-3498cd2963ef.avif",
+      caption: "Covered Veranda & Sunlit Colonnade",
       category: "exterior",
     },
   ];
