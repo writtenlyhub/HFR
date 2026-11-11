@@ -11,6 +11,9 @@ import {
   Sparkles,
   CreditCard,
   RefreshCw,
+  ChevronLeft,
+  ChevronRight,
+  Calendar,
 } from "lucide-react";
 
 export interface ListingOptionBrief {
@@ -120,8 +123,14 @@ export function BookingWidget({
     };
   } | null>(null);
 
-  // Hold modal & form state
-  const [showHoldModal, setShowHoldModal] = useState(false);
+  // Inline calendar state
+  const [calendarMonth, setCalendarMonth] = useState(() => {
+    const initDate = defaultCheckIn ? new Date(`${defaultCheckIn}T00:00:00`) : new Date();
+    return new Date(initDate.getFullYear(), initDate.getMonth(), 1);
+  });
+
+  // Inline Hold Form state (no popup modal!)
+  const [showInlineHoldForm, setShowInlineHoldForm] = useState(false);
   const [guestName, setGuestName] = useState("");
   const [guestEmail, setGuestEmail] = useState("");
   const [guestPhone, setGuestPhone] = useState("");
@@ -249,7 +258,7 @@ export function BookingWidget({
         totalAmount: json.data.pricing.totalAmount,
       });
       setSecondsRemaining(json.data.expiresInSeconds);
-      setShowHoldModal(false);
+      setShowInlineHoldForm(false);
     } catch (e: unknown) {
       const errorMsg =
         e instanceof Error ? e.message : "Network error. Please try again.";
@@ -419,6 +428,75 @@ export function BookingWidget({
     navigator.clipboard.writeText(confirmedBooking.bookingReference);
     setCopiedRef(true);
     setTimeout(() => setCopiedRef(false), 2000);
+  };
+
+  // Inline Calendar calculation & state helpers
+  const year = calendarMonth.getFullYear();
+  const month = calendarMonth.getMonth();
+  const monthName = calendarMonth.toLocaleDateString("en-IN", {
+    month: "long",
+    year: "numeric",
+  });
+
+  const firstDay = new Date(year, month, 1);
+  const startingDayIndex = (firstDay.getDay() + 6) % 7;
+  const totalDays = new Date(year, month + 1, 0).getDate();
+
+  const daysArray: (string | null)[] = [];
+  for (let i = 0; i < startingDayIndex; i++) {
+    daysArray.push(null);
+  }
+  for (let d = 1; d <= totalDays; d++) {
+    const mStr = String(month + 1).padStart(2, "0");
+    const dStr = String(d).padStart(2, "0");
+    daysArray.push(`${year}-${mStr}-${dStr}`);
+  }
+  const todayStr = new Date().toISOString().split("T")[0];
+
+  const formatDisplayDate = (dateStr: string) => {
+    if (!dateStr) return "Select date";
+    const [y, m, d] = dateStr.split("-").map(Number);
+    const date = new Date(y, m - 1, d);
+    return date.toLocaleDateString("en-IN", {
+      day: "numeric",
+      month: "short",
+    });
+  };
+
+  const selectedNights =
+    checkIn && checkOut && checkOut > checkIn
+      ? Math.ceil(
+          (new Date(`${checkOut}T00:00:00`).getTime() -
+            new Date(`${checkIn}T00:00:00`).getTime()) /
+            (1000 * 60 * 60 * 24)
+        )
+      : 0;
+
+  const prevMonth = () => {
+    setCalendarMonth(
+      (prev) => new Date(prev.getFullYear(), prev.getMonth() - 1, 1)
+    );
+  };
+  const nextMonth = () => {
+    setCalendarMonth(
+      (prev) => new Date(prev.getFullYear(), prev.getMonth() + 1, 1)
+    );
+  };
+
+  const handleDateClick = (dateStr: string) => {
+    if (!checkIn || (checkIn && checkOut)) {
+      setCheckIn(dateStr);
+      setCheckOut("");
+      setAvailabilityData(null);
+    } else if (checkIn && !checkOut) {
+      if (dateStr <= checkIn) {
+        setCheckIn(dateStr);
+        setCheckOut("");
+        setAvailabilityData(null);
+      } else {
+        setCheckOut(dateStr);
+      }
+    }
   };
 
   return (
@@ -618,12 +696,12 @@ export function BookingWidget({
           <div className="flex items-center justify-between pb-4 border-b border-neutral-200">
             <div>
               <span className="text-[10px] uppercase font-bold text-neutral-500 tracking-wider">
-                {lockConfiguration ? "SELECTED ACCOMMODATION" : "FAST RESERVATION"}
+                {lockConfiguration ? "SELECTED ACCOMMODATION" : "AVAILABILITY CHECK"}
               </span>
               <h4 className="text-lg font-bold text-neutral-900">
                 {lockConfiguration
                   ? activeOption?.title || "Check Dates"
-                  : "Check Date Availability"}
+                  : "Check Property Availability"}
               </h4>
             </div>
             <div className="text-right">
@@ -633,37 +711,7 @@ export function BookingWidget({
             </div>
           </div>
 
-          <div className="space-y-4 pt-5">
-            {/* Dates Inputs */}
-            <div className="grid grid-cols-2 gap-2">
-              <div className="p-2.5 bg-[#FCFCFC] rounded-xl border border-neutral-200 focus-within:border-black transition-colors">
-                <label className="block text-[9px] font-extrabold uppercase tracking-wider text-neutral-600">
-                  CHECK-IN
-                </label>
-                <input
-                  type="date"
-                  value={checkIn}
-                  min={new Date().toISOString().split("T")[0]}
-                  onChange={(e) => setCheckIn(e.target.value)}
-                  className="w-full text-xs font-semibold bg-transparent border-0 p-0 text-neutral-900 focus:ring-0 focus:outline-none"
-                  required
-                />
-              </div>
-              <div className="p-2.5 bg-[#FCFCFC] rounded-xl border border-neutral-200 focus-within:border-black transition-colors">
-                <label className="block text-[9px] font-extrabold uppercase tracking-wider text-neutral-600">
-                  CHECKOUT
-                </label>
-                <input
-                  type="date"
-                  value={checkOut}
-                  min={checkIn}
-                  onChange={(e) => setCheckOut(e.target.value)}
-                  className="w-full text-xs font-semibold bg-transparent border-0 p-0 text-neutral-900 focus:ring-0 focus:outline-none"
-                  required
-                />
-              </div>
-            </div>
-
+          <div className="space-y-4 pt-4">
             {/* Configuration Selector: Render only if NOT locked */}
             {!lockConfiguration && (
               <div className="p-2.5 bg-[#FCFCFC] rounded-xl border border-neutral-200 focus-within:border-black transition-colors">
@@ -721,6 +769,152 @@ export function BookingWidget({
               </div>
             </div>
 
+            {/* Bespoke Interactive Inline Calendar */}
+            <div className="p-3.5 bg-white rounded-2xl border border-neutral-200/90 shadow-2xs space-y-3">
+              {/* Selected Dates Summary Bar */}
+              <div className="flex items-center justify-between pb-2.5 border-b border-neutral-100">
+                <div className="flex items-center gap-1.5 text-xs">
+                  <span
+                    className={`px-2 py-0.5 rounded-md text-[11px] font-bold transition-all ${
+                      checkIn && !checkOut
+                        ? "bg-amber-100 text-amber-950 ring-2 ring-amber-400/80"
+                        : "bg-neutral-100 text-neutral-800"
+                    }`}
+                  >
+                    In: {checkIn ? formatDisplayDate(checkIn) : "Check-in"}
+                  </span>
+                  <span className="text-neutral-400 text-xs">→</span>
+                  <span
+                    className={`px-2 py-0.5 rounded-md text-[11px] font-bold transition-all ${
+                      checkIn && !checkOut
+                        ? "bg-neutral-50 text-neutral-400 border border-dashed border-neutral-300"
+                        : checkOut
+                        ? "bg-neutral-100 text-neutral-800"
+                        : "bg-neutral-100 text-neutral-400"
+                    }`}
+                  >
+                    Out: {checkOut ? formatDisplayDate(checkOut) : "Checkout"}
+                  </span>
+                </div>
+                {selectedNights > 0 && (
+                  <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200/60 shrink-0">
+                    {selectedNights} {selectedNights === 1 ? "Night" : "Nights"}
+                  </span>
+                )}
+              </div>
+
+              {/* Month Stepper Header */}
+              <div className="flex items-center justify-between px-1">
+                <button
+                  type="button"
+                  onClick={prevMonth}
+                  disabled={
+                    calendarMonth <=
+                    new Date(new Date().getFullYear(), new Date().getMonth(), 1)
+                  }
+                  className="w-7 h-7 rounded-lg hover:bg-neutral-100 disabled:opacity-25 disabled:hover:bg-transparent flex items-center justify-center transition-colors cursor-pointer disabled:cursor-not-allowed"
+                  title="Previous month"
+                >
+                  <ChevronLeft size={16} />
+                </button>
+                <div className="text-xs font-bold text-neutral-900 flex items-center gap-1.5">
+                  <Calendar size={13} className="text-neutral-500" />
+                  <span>{monthName}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={nextMonth}
+                  className="w-7 h-7 rounded-lg hover:bg-neutral-100 flex items-center justify-center transition-colors cursor-pointer"
+                  title="Next month"
+                >
+                  <ChevronRight size={16} />
+                </button>
+              </div>
+
+              {/* Weekday Labels (Monday to Sunday) */}
+              <div className="grid grid-cols-7 gap-1 text-center">
+                {["M", "T", "W", "T", "F", "S", "S"].map((d, i) => (
+                  <span
+                    key={i}
+                    className="text-[10px] font-bold text-neutral-400 py-0.5"
+                  >
+                    {d}
+                  </span>
+                ))}
+              </div>
+
+              {/* Calendar Days Matrix */}
+              <div className="grid grid-cols-7 gap-y-1 gap-x-0 text-center">
+                {daysArray.map((dateStr, idx) => {
+                  if (!dateStr) {
+                    return <div key={`empty-${idx}`} className="h-8" />;
+                  }
+                  const dayNumber = Number(dateStr.split("-")[2]);
+                  const isPast = dateStr < todayStr;
+                  const isStart = dateStr === checkIn;
+                  const isEnd = dateStr === checkOut;
+                  const isBetween =
+                    checkIn && checkOut && dateStr > checkIn && dateStr < checkOut;
+
+                  return (
+                    <div
+                      key={dateStr}
+                      className={`h-8 flex items-center justify-center relative ${
+                        isBetween ? "bg-amber-100/70" : ""
+                      } ${
+                        isStart && checkOut
+                          ? "bg-gradient-to-r from-transparent to-amber-100/70 rounded-l-full"
+                          : ""
+                      } ${
+                        isEnd
+                          ? "bg-gradient-to-l from-transparent to-amber-100/70 rounded-r-full"
+                          : ""
+                      }`}
+                    >
+                      <button
+                        type="button"
+                        disabled={isPast}
+                        onClick={() => handleDateClick(dateStr)}
+                        className={`w-7 h-7 flex items-center justify-center text-xs transition-all ${
+                          isStart || isEnd
+                            ? "bg-neutral-950 text-white font-bold rounded-full shadow-sm scale-105 z-10"
+                            : isBetween
+                            ? "text-amber-950 font-semibold"
+                            : isPast
+                            ? "text-neutral-300 line-through cursor-not-allowed"
+                            : "text-neutral-800 hover:bg-neutral-100 rounded-full cursor-pointer font-medium"
+                        }`}
+                      >
+                        {dayNumber}
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Interactive Help & Clear Action */}
+              <div className="flex items-center justify-between pt-1 border-t border-neutral-100 text-[10px] text-neutral-500">
+                <span>
+                  {checkIn && !checkOut
+                    ? "Select checkout date"
+                    : "Click date to change stay"}
+                </span>
+                {(checkIn || checkOut) && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCheckIn("");
+                      setCheckOut("");
+                      setAvailabilityData(null);
+                    }}
+                    className="text-amber-800 hover:underline font-semibold cursor-pointer"
+                  >
+                    Reset Dates
+                  </button>
+                )}
+              </div>
+            </div>
+
             {/* Live Availability Status */}
             {isChecking ? (
               <div className="p-3 bg-neutral-50 rounded-xl text-neutral-500 text-xs flex items-center justify-center gap-2 animate-pulse">
@@ -775,17 +969,108 @@ export function BookingWidget({
               )
             ) : null}
 
-            {/* Action Button: Lock 15-Minute Hold */}
-            <button
-              type="button"
-              disabled={isChecking || !availabilityData?.available}
-              onClick={() => setShowHoldModal(true)}
-              className="w-full py-4 bg-black hover:bg-neutral-800 disabled:bg-neutral-300 disabled:cursor-not-allowed text-white text-xs uppercase tracking-wider font-semibold rounded-xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer"
-            >
-              <Clock size={14} />
-              <span>Lock 15-Min Hold & Reserve</span>
-              <span>→</span>
-            </button>
+            {/* Inline Hold / Reservation Expansion (Zero Popup Modals!) */}
+            {showInlineHoldForm ? (
+              <div className="p-4 bg-white rounded-2xl border border-neutral-300 shadow-sm space-y-3.5 animate-in fade-in slide-in-from-top-2 duration-300">
+                <div className="flex items-center justify-between pb-2 border-b border-neutral-100">
+                  <div>
+                    <h5 className="text-xs font-bold text-neutral-900">
+                      Guest Details for 15-Min Hold
+                    </h5>
+                    <p className="text-[10px] text-neutral-500">
+                      Lock property exclusively without payment
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowInlineHoldForm(false)}
+                    className="text-neutral-400 hover:text-black text-xs font-bold px-2 py-1 rounded cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                </div>
+
+                {holdError && (
+                  <div className="p-2.5 bg-rose-50 border border-rose-200 text-rose-800 rounded-lg text-xs font-medium">
+                    {holdError}
+                  </div>
+                )}
+
+                <form onSubmit={handleCreateHold} className="space-y-3">
+                  <div>
+                    <label className="block text-[9px] font-bold uppercase tracking-wider text-neutral-600 mb-0.5">
+                      Full Name *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. Vikramaditya Rathore"
+                      value={guestName}
+                      onChange={(e) => setGuestName(e.target.value)}
+                      className="w-full text-xs p-2.5 rounded-lg border border-neutral-200 focus:border-black focus:outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[9px] font-bold uppercase tracking-wider text-neutral-600 mb-0.5">
+                      Email Address *
+                    </label>
+                    <input
+                      type="email"
+                      required
+                      placeholder="e.g. guest@example.com"
+                      value={guestEmail}
+                      onChange={(e) => setGuestEmail(e.target.value)}
+                      className="w-full text-xs p-2.5 rounded-lg border border-neutral-200 focus:border-black focus:outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[9px] font-bold uppercase tracking-wider text-neutral-600 mb-0.5">
+                      Phone Number / WhatsApp
+                    </label>
+                    <input
+                      type="tel"
+                      placeholder="e.g. +91 98765 43210"
+                      value={guestPhone}
+                      onChange={(e) => setGuestPhone(e.target.value)}
+                      className="w-full text-xs p-2.5 rounded-lg border border-neutral-200 focus:border-black focus:outline-none"
+                    />
+                  </div>
+
+                  <div className="pt-1">
+                    <button
+                      type="submit"
+                      disabled={isHolding}
+                      className="w-full py-3 bg-black hover:bg-neutral-800 disabled:bg-neutral-500 text-white text-xs uppercase tracking-wider font-semibold rounded-xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer"
+                    >
+                      {isHolding ? (
+                        <>
+                          <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                          <span>Acquiring Reservation Hold...</span>
+                        </>
+                      ) : (
+                        <>
+                          <span>Confirm 15-Min Hold</span>
+                          <span>→</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            ) : (
+              <button
+                type="button"
+                disabled={isChecking || !availabilityData?.available}
+                onClick={() => setShowInlineHoldForm(true)}
+                className="w-full py-4 bg-black hover:bg-neutral-800 disabled:bg-neutral-300 disabled:cursor-not-allowed text-white text-xs uppercase tracking-wider font-semibold rounded-xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <Clock size={14} />
+                <span>Lock 15-Min Hold &amp; Reserve</span>
+                <span>→</span>
+              </button>
+            )}
 
             <p className="text-[10px] text-center text-neutral-500 flex items-center justify-center gap-1">
               <ShieldCheck size={12} className="text-neutral-400" />
@@ -793,125 +1078,6 @@ export function BookingWidget({
             </p>
           </div>
         </>
-      )}
-
-      {/* 15-Minute Hold Guest Modal */}
-      {showHoldModal && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl space-y-5 animate-scale-up">
-            <div className="flex items-center justify-between pb-3 border-b border-neutral-200">
-              <div>
-                <h3 className="text-lg font-bold text-neutral-900">
-                  Lock Reservation
-                </h3>
-                <p className="text-xs text-neutral-500">
-                  15-minute temporary exclusive inventory hold
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setShowHoldModal(false)}
-                className="text-neutral-400 hover:text-black text-xl font-light cursor-pointer"
-              >
-                ✕
-              </button>
-            </div>
-
-            {holdError && (
-              <div className="p-3 bg-rose-50 border border-rose-200 text-rose-800 rounded-xl text-xs font-medium">
-                {holdError}
-              </div>
-            )}
-
-            <form onSubmit={handleCreateHold} className="space-y-4">
-              <div>
-                <label className="block text-[10px] font-bold uppercase tracking-wider text-neutral-600 mb-1">
-                  Full Name *
-                </label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. Vikramaditya Rathore"
-                  value={guestName}
-                  onChange={(e) => setGuestName(e.target.value)}
-                  className="w-full text-xs p-3 rounded-xl border border-neutral-200 focus:border-black focus:outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[10px] font-bold uppercase tracking-wider text-neutral-600 mb-1">
-                  Email Address *
-                </label>
-                <input
-                  type="email"
-                  required
-                  placeholder="e.g. guest@example.com"
-                  value={guestEmail}
-                  onChange={(e) => setGuestEmail(e.target.value)}
-                  className="w-full text-xs p-3 rounded-xl border border-neutral-200 focus:border-black focus:outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[10px] font-bold uppercase tracking-wider text-neutral-600 mb-1">
-                  Phone Number / WhatsApp
-                </label>
-                <input
-                  type="tel"
-                  placeholder="e.g. +91 98765 43210"
-                  value={guestPhone}
-                  onChange={(e) => setGuestPhone(e.target.value)}
-                  className="w-full text-xs p-3 rounded-xl border border-neutral-200 focus:border-black focus:outline-none"
-                />
-              </div>
-
-              <div className="p-3 bg-stone-50 rounded-xl border border-stone-200 text-xs space-y-1">
-                <div className="flex justify-between">
-                  <span className="text-neutral-500">Configuration:</span>
-                  <span className="font-semibold text-neutral-800">
-                    {activeOption?.title}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-neutral-500">Dates:</span>
-                  <span className="font-semibold text-neutral-800">
-                    {checkIn} to {checkOut}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-neutral-500">Guests:</span>
-                  <span className="font-semibold text-neutral-800">
-                    {guestCount} {guestCount === 1 ? "Guest" : "Guests"}
-                  </span>
-                </div>
-                <div className="flex justify-between pt-1 border-t border-neutral-200 font-bold">
-                  <span>Total Lock Price:</span>
-                  <span className="text-neutral-900">
-                    ₹{availabilityData?.pricing?.totalAmount.toLocaleString("en-IN")}
-                  </span>
-                </div>
-              </div>
-
-              <button
-                type="submit"
-                disabled={isHolding}
-                className="w-full py-3.5 bg-black hover:bg-neutral-800 disabled:bg-neutral-500 text-white text-xs uppercase tracking-wider font-semibold rounded-xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer"
-              >
-                {isHolding ? (
-                  <>
-                    <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-                    <span>Acquiring PostgreSQL Lock...</span>
-                  </>
-                ) : (
-                  <>
-                    <span>Confirm 15-Min Hold</span>
-                    <span>→</span>
-                  </>
-                )}
-              </button>
-            </form>
-          </div>
-        </div>
       )}
     </div>
   );
