@@ -92,42 +92,48 @@ export function PhotoGallery({ images = [] }: PhotoGalleryProps) {
 
   return (
     <section
-      className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 pt-8 pb-12"
+      className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 pt-4 sm:pt-6 pb-12"
       data-purpose="property-gallery"
       id="gallery"
     >
       <div id="property-gallery" className="sr-only" aria-hidden="true" />
-      {/* Header bar */}
-      <div className="flex flex-col sm:row sm:items-end justify-between mb-4 gap-2">
+      {/* Header bar with architectural baseline */}
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-6 pb-5 border-b border-neutral-200/70 gap-4">
         <div>
           <span className="text-[11px] font-bold tracking-[0.2em] text-neutral-500 uppercase">
             Visual Tour
           </span>
-          <h2 className="text-xl sm:text-2xl font-bold text-neutral-900 tracking-tight">
-            Spaces of Dev Stays
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold uppercase tracking-tight text-neutral-900 mt-1 font-sans">
+            SPACES OF DEV STAYS
           </h2>
-          <p className="text-xs sm:text-sm text-neutral-500">
+          <p className="text-xs sm:text-sm text-neutral-600 mt-1.5 max-w-2xl leading-relaxed">
             Your own private 3BHK villa in Raja Park with hand-crafted
-            interiors, front veranda &amp; private parking
+            interiors, front veranda &amp; private parking.
           </p>
         </div>
 
         {/* Share and Save controls */}
-        <div className="flex items-center gap-3 text-xs font-semibold text-neutral-700">
+        <div className="flex items-center gap-2.5 shrink-0 self-start sm:self-end">
           <button
             onClick={handleShare}
-            className="flex items-center gap-1.5 hover:text-black transition-colors"
+            className="px-3.5 py-1.5 rounded-full border border-neutral-200 bg-white hover:bg-neutral-50 text-xs font-semibold text-neutral-700 shadow-2xs flex items-center gap-1.5 transition-all cursor-pointer hover:border-neutral-300"
           >
-            <Share2 size={15} />
+            <Share2 size={13} className="text-neutral-500" />
             <span>{shareFeedback ? "Link Copied!" : "Share"}</span>
           </button>
           <button
             onClick={() => setIsSaved(!isSaved)}
-            className={`flex items-center gap-1.5 transition-colors ${
-              isSaved ? "text-rose-500" : "hover:text-black"
+            className={`px-3.5 py-1.5 rounded-full border text-xs font-semibold shadow-2xs flex items-center gap-1.5 transition-all cursor-pointer ${
+              isSaved
+                ? "border-rose-200 bg-rose-50 text-rose-600"
+                : "border-neutral-200 bg-white hover:bg-neutral-50 text-neutral-700 hover:border-neutral-300"
             }`}
           >
-            <Heart size={15} fill={isSaved ? "currentColor" : "none"} />
+            <Heart
+              size={13}
+              fill={isSaved ? "currentColor" : "none"}
+              className={isSaved ? "text-rose-500" : "text-neutral-500"}
+            />
             <span>{isSaved ? "Saved" : "Save"}</span>
           </button>
         </div>
