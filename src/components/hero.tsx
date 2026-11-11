@@ -27,10 +27,11 @@ export function Hero({
             loop
             muted
             playsInline
+            preload="auto"
             poster="/images/living-room/imgi_491_9b8ea86b-c2d1-4327-a5dc-0204663820d1.jpg"
           >
             <source
-              src="https://assets.mixkit.co/videos/preview/mixkit-luxury-villa-exterior-with-pool-at-sunset-42867-large.mp4"
+              src="/videos/hero-video.mp4"
               type="video/mp4"
             />
           </video>
