@@ -41,35 +41,16 @@ export function Hero({
         </div>
 
         {/* Hero Content */}
-        <div className="relative z-10 max-w-3xl pt-1">
-          <h1 className="text-2xl sm:text-4xl lg:text-[2.75rem] font-extrabold uppercase leading-[1.12] tracking-tight mb-3 font-sans">
+        <div className="relative z-10 max-w-3xl pt-1 sm:pt-2">
+          <h1 className="text-2xl sm:text-4xl lg:text-[2.75rem] font-extrabold uppercase leading-[1.12] tracking-tight mb-5 sm:mb-6 font-sans">
             {headline}
           </h1>
-          <p className="text-stone-200 text-xs sm:text-sm font-normal leading-relaxed max-w-2xl mb-4 opacity-95">
+          <p className="text-stone-200 text-xs sm:text-sm md:text-base font-normal leading-relaxed max-w-2xl mb-8 sm:mb-10 opacity-95">
             {description}
           </p>
 
-          {/* Feature Badges */}
-          <div className="flex flex-wrap items-center gap-2 sm:gap-2.5 text-[11px] sm:text-xs text-stone-200 mb-6 font-medium">
-            <span className="px-2.5 py-1 rounded-md bg-white/10 backdrop-blur-md border border-white/10">
-              3 King Bedrooms
-            </span>
-            <span className="text-white/40">•</span>
-            <span className="px-2.5 py-1 rounded-md bg-white/10 backdrop-blur-md border border-white/10">
-              Priced for 6 (Hosts up to 15)
-            </span>
-            <span className="text-white/40">•</span>
-            <span className="px-2.5 py-1 rounded-md bg-white/10 backdrop-blur-md border border-white/10">
-              Private Veranda &amp; Parking
-            </span>
-            <span className="text-white/40">•</span>
-            <span className="px-2.5 py-1 rounded-md bg-white/10 backdrop-blur-md border border-white/10">
-              Pet Friendly
-            </span>
-          </div>
-
           {/* Pricing & CTA Controls */}
-          <div className="flex flex-col sm:flex-row sm:items-center gap-3.5 sm:gap-5">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 pt-1">
             <div className="flex items-baseline gap-1.5">
               <span className="text-[11px] uppercase tracking-wider text-neutral-400">
                 Starting from
@@ -79,7 +60,7 @@ export function Hero({
               </span>
               <span className="text-xs text-stone-300">/ night</span>
             </div>
-            <div className="flex flex-wrap items-center gap-2.5">
+            <div className="flex flex-wrap items-center gap-2.5 sm:gap-3">
               <a
                 className="bg-white hover:bg-neutral-100 text-neutral-900 font-semibold px-5 py-2.5 sm:py-3 rounded-full text-xs uppercase tracking-wider transition-all shadow-md flex items-center gap-1.5 group"
                 href="#accommodations"
