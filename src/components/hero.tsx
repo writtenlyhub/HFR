@@ -40,17 +40,20 @@ export function Hero({
           <div className="absolute inset-0 bg-gradient-to-r from-stone-950/90 via-stone-950/45 to-transparent"></div>
         </div>
 
-        {/* Hero Content */}
+        {/* Hero Content (Headline & Subtitle) */}
         <div className="relative z-10 max-w-3xl pt-1 sm:pt-2">
           <h1 className="text-2xl sm:text-4xl lg:text-[2.75rem] font-extrabold uppercase leading-[1.12] tracking-tight mb-5 sm:mb-6 font-sans">
             {headline}
           </h1>
-          <p className="text-stone-200 text-xs sm:text-sm md:text-base font-normal leading-relaxed max-w-2xl mb-8 sm:mb-10 opacity-95">
+          <p className="text-stone-200 text-xs sm:text-sm md:text-base font-normal leading-relaxed max-w-2xl opacity-95">
             {description}
           </p>
+        </div>
 
+        {/* Bottom Controls Row: Pricing & CTAs (Left) + Superhost Pill (Right) */}
+        <div className="relative z-10 flex flex-col md:flex-row md:items-end justify-between gap-6 pt-6 sm:pt-8 mt-auto">
           {/* Pricing & CTA Controls */}
-          <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 pt-1">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6">
             <div className="flex items-baseline gap-1.5">
               <span className="text-[11px] uppercase tracking-wider text-neutral-400">
                 Starting from
@@ -79,29 +82,29 @@ export function Hero({
               </a>
             </div>
           </div>
-        </div>
 
-        {/* Superhost Verification Pill (Bottom Right) */}
-        <div className="relative z-10 self-start sm:self-end mt-6 sm:mt-0 bg-white/95 backdrop-blur-md text-black py-2 px-3.5 rounded-xl flex items-center gap-2.5 shadow-md">
-          <div className="flex -space-x-1.5">
-            <img
-              alt="Host Aparna"
-              className="w-7 h-7 rounded-full border-2 border-white object-cover"
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuALx93u76PuaKYEk6AFQ8V5tF9b2DFahs5YxtPHfeLX0XI6xgE1ebvRKbkZf-vJpcNjWjwLSuwKF0vLsKF73TMRpQ4ESihNYC6LrC-Zdtw4ump2WIHUxHZ1SeWiQcPt0MKgzhRZ6Wh0LAN3Hy1ozclmu4eDRsWxeS26HCmTk3Pqvs1XLn6v7jH5n14yj6_RlBhM-n6BpCKsEB40mUQEs8Av7UjTVAas4Y0kGapKlzrsH-4xTFKsSFao"
-            />
-            <img
-              alt="Guest"
-              className="w-7 h-7 rounded-full border-2 border-white object-cover"
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuDux9Ae8sWNnhMvojoxQQAHGKkpZdrVYt_yQGoYmYIEkg6YhczI-I-p59v_Dv3eOAAyRqerfF_CQO59dpOj-YMbvN7eY0KPMVrbtjunaXsWEPGXZaJirItJDdFdQElwsYLKSfhYCo_CyzzZQOlvS39BmWKG3TCoyaDx9QHsvwYaFjZLxo6ouPwoosVDF1bCKNped69ODaPEy0HPzw3EMZ2TO1xfwABirKk_9gqcmSp96VOsrOYzP5Yl"
-            />
-          </div>
-          <div className="border-l border-gray-200 pl-2.5">
-            <div className="text-[11px] font-bold leading-tight flex items-center gap-1">
-              <span>Superhost Rated 5.0</span>
-              <span className="text-amber-500 text-xs">★</span>
+          {/* Superhost Verification Pill (Bottom Right) */}
+          <div className="self-start md:self-end bg-white/95 backdrop-blur-md text-black py-2 px-3.5 rounded-xl flex items-center gap-2.5 shadow-md shrink-0">
+            <div className="flex -space-x-1.5">
+              <img
+                alt="Host Aparna"
+                className="w-7 h-7 rounded-full border-2 border-white object-cover"
+                src="https://lh3.googleusercontent.com/aida-public/AB6AXuALx93u76PuaKYEk6AFQ8V5tF9b2DFahs5YxtPHfeLX0XI6xgE1ebvRKbkZf-vJpcNjWjwLSuwKF0vLsKF73TMRpQ4ESihNYC6LrC-Zdtw4ump2WIHUxHZ1SeWiQcPt0MKgzhRZ6Wh0LAN3Hy1ozclmu4eDRsWxeS26HCmTk3Pqvs1XLn6v7jH5n14yj6_RlBhM-n6BpCKsEB40mUQEs8Av7UjTVAas4Y0kGapKlzrsH-4xTFKsSFao"
+              />
+              <img
+                alt="Guest"
+                className="w-7 h-7 rounded-full border-2 border-white object-cover"
+                src="https://lh3.googleusercontent.com/aida-public/AB6AXuDux9Ae8sWNnhMvojoxQQAHGKkpZdrVYt_yQGoYmYIEkg6YhczI-I-p59v_Dv3eOAAyRqerfF_CQO59dpOj-YMbvN7eY0KPMVrbtjunaXsWEPGXZaJirItJDdFdQElwsYLKSfhYCo_CyzzZQOlvS39BmWKG3TCoyaDx9QHsvwYaFjZLxo6ouPwoosVDF1bCKNped69ODaPEy0HPzw3EMZ2TO1xfwABirKk_9gqcmSp96VOsrOYzP5Yl"
+              />
             </div>
-            <div className="text-[9.5px] text-neutral-600 font-semibold mt-0.5">
-              18 Reviews · 100% 5-Star Certified
+            <div className="border-l border-gray-200 pl-2.5">
+              <div className="text-[11px] font-bold leading-tight flex items-center gap-1">
+                <span>Superhost Rated 5.0</span>
+                <span className="text-amber-500 text-xs">★</span>
+              </div>
+              <div className="text-[9.5px] text-neutral-600 font-semibold mt-0.5">
+                18 Reviews · 100% 5-Star Certified
+              </div>
             </div>
           </div>
         </div>
