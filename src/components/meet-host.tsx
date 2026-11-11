@@ -21,7 +21,7 @@ export function MeetHost() {
             <div className="relative shrink-0">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuALx93u76PuaKYEk6AFQ8V5tF9b2DFahs5YxtPHfeLX0XI6xgE1ebvRKbkZf-vJpcNjWjwLSuwKF0vLsKF73TMRpQ4ESihNYC6LrC-Zdtw4ump2WIHUxHZ1SeWiQcPt0MKgzhRZ6Wh0LAN3Hy1ozclmu4eDRsWxeS26HCmTk3Pqvs1XLn6v7jH5n14yj6_RlBhM-n6BpCKsEB40mUQEs8Av7UjTVAas4Y0kGapKlzrsH-4xTFKsSFao"
+                src="/images/host/host-aparna.avif"
                 alt="Aparna"
                 className="w-24 h-24 rounded-full object-cover border-2 border-white shadow-md"
               />
@@ -116,7 +116,7 @@ export function MeetHost() {
             <div className="flex items-center gap-3">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuDXLVlXyM-vQ16dmS0DcEfEN8uh6VNmKA_9nMqHNj7_RBlCOQjjmUAsneJi0-AA_8BMxWNg8XItN41sveL6CoiMUMPwEJ08LG8iZFSJv5p_wItSML3ipDVZ-9RjMYV3eAf-3c7kNb3Hw_wHd7zULTmtVjriJJ1NIKDhAn047BQ1p1Y6t0j7KpzgTrwbXw8B3jWF52UHhVstmIad8V6bUGG4wK0dR-rERLZ3iVlYxvF7OWJCD9RZ44S6"
+                src="/images/host/cohost-saksham.avif"
                 alt="Saksham"
                 className="w-10 h-10 rounded-full object-cover border border-neutral-200"
               />

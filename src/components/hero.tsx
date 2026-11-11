@@ -89,12 +89,12 @@ export function Hero({
               <img
                 alt="Host Aparna"
                 className="w-7 h-7 rounded-full border-2 border-white object-cover"
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuALx93u76PuaKYEk6AFQ8V5tF9b2DFahs5YxtPHfeLX0XI6xgE1ebvRKbkZf-vJpcNjWjwLSuwKF0vLsKF73TMRpQ4ESihNYC6LrC-Zdtw4ump2WIHUxHZ1SeWiQcPt0MKgzhRZ6Wh0LAN3Hy1ozclmu4eDRsWxeS26HCmTk3Pqvs1XLn6v7jH5n14yj6_RlBhM-n6BpCKsEB40mUQEs8Av7UjTVAas4Y0kGapKlzrsH-4xTFKsSFao"
+                src="/images/host/host-aparna.avif"
               />
               <img
-                alt="Guest"
+                alt="Co-Host Saksham"
                 className="w-7 h-7 rounded-full border-2 border-white object-cover"
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuDux9Ae8sWNnhMvojoxQQAHGKkpZdrVYt_yQGoYmYIEkg6YhczI-I-p59v_Dv3eOAAyRqerfF_CQO59dpOj-YMbvN7eY0KPMVrbtjunaXsWEPGXZaJirItJDdFdQElwsYLKSfhYCo_CyzzZQOlvS39BmWKG3TCoyaDx9QHsvwYaFjZLxo6ouPwoosVDF1bCKNped69ODaPEy0HPzw3EMZ2TO1xfwABirKk_9gqcmSp96VOsrOYzP5Yl"
+                src="/images/host/cohost-saksham.avif"
               />
             </div>
             <div className="border-l border-gray-200 pl-2.5">
