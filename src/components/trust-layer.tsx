@@ -10,14 +10,14 @@ export function TrustLayer() {
           <div className="flex items-center gap-3 pt-2 lg:pt-0">
             <div className="w-8 h-8 rounded-full bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0">
               <span className="material-symbols-outlined text-[18px]">
-                verified
+                home
               </span>
             </div>
             <div>
               <div className="text-xs font-bold text-neutral-900 leading-tight">
-                Verified Luxury Stay
+                Private 3BHK Villa
               </div>
-              <p className="text-[11px] text-neutral-500">Inspected & Approved</p>
+              <p className="text-[11px] text-neutral-500">No Shared Spaces</p>
             </div>
           </div>
 
@@ -28,9 +28,9 @@ export function TrustLayer() {
             </div>
             <div>
               <div className="text-xs font-bold text-neutral-900 leading-tight">
-                4.98 ★ Rating
+                5.0 ★ Rating
               </div>
-              <p className="text-[11px] text-neutral-500">120+ Verified Reviews</p>
+              <p className="text-[11px] text-neutral-500">18 Verified Reviews</p>
             </div>
           </div>
 
@@ -38,15 +38,15 @@ export function TrustLayer() {
           <div className="flex items-center gap-3 pt-2 lg:pt-0 lg:pl-6">
             <div className="w-8 h-8 rounded-full bg-neutral-100 text-neutral-800 flex items-center justify-center shrink-0">
               <span className="material-symbols-outlined text-[18px]">
-                shield
+                pin_drop
               </span>
             </div>
             <div>
               <div className="text-xs font-bold text-neutral-900 leading-tight">
-                Federation Certified
+                Raja Park, Central Jaipur
               </div>
               <p className="text-[11px] text-neutral-500">
-                Rajasthan Quality Standards
+                2-Min Walk to Cafes
               </p>
             </div>
           </div>
@@ -54,13 +54,13 @@ export function TrustLayer() {
           {/* Pillar 4 */}
           <div className="flex items-center gap-3 pt-2 lg:pt-0 lg:pl-6">
             <div className="w-8 h-8 rounded-full bg-neutral-100 text-neutral-800 flex items-center justify-center shrink-0">
-              <span className="material-symbols-outlined text-[18px]">lock</span>
+              <span className="material-symbols-outlined text-[18px]">pets</span>
             </div>
             <div>
               <div className="text-xs font-bold text-neutral-900 leading-tight">
-                100% Direct Booking
+                Pet Friendly Stay
               </div>
-              <p className="text-[11px] text-neutral-500">Zero Hidden OTA Fees</p>
+              <p className="text-[11px] text-neutral-500">Fur Babies Welcome</p>
             </div>
           </div>
 
@@ -68,14 +68,14 @@ export function TrustLayer() {
           <div className="flex items-center gap-3 pt-2 lg:pt-0 lg:pl-6 col-span-2 md:col-span-1">
             <div className="w-8 h-8 rounded-full bg-neutral-100 text-neutral-800 flex items-center justify-center shrink-0">
               <span className="material-symbols-outlined text-[18px]">
-                support_agent
+                local_cafe
               </span>
             </div>
             <div>
               <div className="text-xs font-bold text-neutral-900 leading-tight">
-                24/7 Estate Concierge
+                Warm Host Hospitality
               </div>
-              <p className="text-[11px] text-neutral-500">Dedicated Caretaker</p>
+              <p className="text-[11px] text-neutral-500">Coffee Always on Us</p>
             </div>
           </div>
         </div>

@@ -35,30 +35,32 @@ async function main() {
   console.log(`Admin created: ${admin.email}`);
 
   // 2. Create Dev Stays Property
+  const propertyData = {
+    slug: "dev-stays-jaipur",
+    name: "Dev Stays Jaipur",
+    headline: "Your own private 3BHK villa in Central Jaipur (Raja Park)",
+    description:
+      "Your own private 3BHK villa in Central Jaipur (Raja Park) - 3 king bedrooms, 3 bathrooms, a large living room, full kitchen, dining area, veranda & parking for 3-4 cars. Every corner is handcrafted with Rajasthani textiles, crochet details & curated decor. Celebrations, small events & get-togethers are welcome. Priced for 6 guests; message us to host up to 15. Walkable to cafes & 10-25 mins to main attractions. Pet friendly. Board games available.",
+    address: "Raja Park",
+    city: "Jaipur",
+    state: "Rajasthan",
+    country: "India",
+    postalCode: "302004",
+    latitude: 26.8968,
+    longitude: 75.8271,
+    checkInTime: "14:00",
+    checkOutTime: "11:00",
+    houseRules:
+      "Check-in after 14:00 · Checkout before 11:00 (Self check-in via building staff). Celebrations, small events & get-togethers welcome (priced for 6, hosts up to 15). Pet friendly — we love hosting fur babies. Quiet residential lane in central Raja Park. Exterior security cameras on property and smoke alarm installed for your safety.",
+    cancellationPolicy:
+      "Full refund up to 7 days before check-in. 50% refund between 7 days and 48 hours prior to check-in. Direct booking cancellation guarantees applied.",
+    isActive: true,
+  };
+
   const property = await prisma.property.upsert({
     where: { slug: "dev-stays-jaipur" },
-    update: {},
-    create: {
-      slug: "dev-stays-jaipur",
-      name: "Dev Stays Jaipur",
-      headline: "An architectural sanctuary in the Pink City",
-      description:
-        "Crafted with locally quarried, hand-chiseled Dholpur sandstone, Dev Stays is conceived as a serene residential sanctuary in Jaipur's coveted Civil Lines and Raja Park belt. Designed around classic Rajasthani haveli geometry, every sunlit corner frames internal courtyards, bougainvillea verandas, and peaceful water features.",
-      address: "Civil Lines & Raja Park Enclave",
-      city: "Jaipur",
-      state: "Rajasthan",
-      country: "India",
-      postalCode: "302006",
-      latitude: 26.9124,
-      longitude: 75.7873,
-      checkInTime: "14:00",
-      checkOutTime: "11:00",
-      houseRules:
-        "Quiet hours after 10:00 PM to respect neighboring diplomatic residences. No unauthorized parties or non-registered overnight guests. Non-smoking interiors; smoking permitted in open courtyard gardens.",
-      cancellationPolicy:
-        "Full refund up to 7 days before check-in. 50% refund between 7 days and 48 hours prior to check-in. Direct booking cancellation guarantees applied.",
-      isActive: true,
-    },
+    update: propertyData,
+    create: propertyData,
   });
 
   console.log(`Property created: ${property.name}`);
@@ -66,14 +68,17 @@ async function main() {
   // 3. Shared Inventory Group (Exclusive Booking Unit)
   const inventoryGroup = await prisma.inventoryGroup.upsert({
     where: { code: "DEV-MAIN-ESTATE" },
-    update: {},
+    update: {
+      description:
+        "The complete physical footprint of Dev Stays Jaipur including 3 king bedrooms, 3 attached bathrooms, large living room with 3 sofas, full kitchen, dining area, front veranda, and private parking for 3-4 cars.",
+    },
     create: {
       propertyId: property.id,
       name: "Dev Stays Main Estate",
       code: "DEV-MAIN-ESTATE",
       totalPhysicalUnits: 1, // 1 exclusive physical property
       description:
-        "The complete physical footprint of Dev Stays Jaipur including all 3 bedrooms, private courtyard, plunge pool, dining hall, and living salon.",
+        "The complete physical footprint of Dev Stays Jaipur including 3 king bedrooms, 3 attached bathrooms, large living room with 3 sofas, full kitchen, dining area, front veranda, and private parking for 3-4 cars.",
     },
   });
 
@@ -82,7 +87,12 @@ async function main() {
   // 4. Listing Configurations (3 Options mapping to the same inventory group)
   await prisma.listingOption.upsert({
     where: { slug: "royal-suite" },
-    update: {},
+    update: {
+      title: "Main Bedroom",
+      summary: "Private king bedroom with ensuite bath, air conditioning, and garden veranda access.",
+      description:
+        "Three king bedrooms, each with a private attached bathroom (hot water), air conditioning, and fast Wi-Fi throughout. Handcrafted with Rajasthani textiles, crochet details, and antique touches.",
+    },
     create: {
       propertyId: property.id,
       inventoryGroupId: inventoryGroup.id,
@@ -95,9 +105,9 @@ async function main() {
       weekendPricePerNight: 9500.0,
       cleaningFee: 500.0,
       taxPercentage: 12.0,
-      summary: "A private and comfortable bedroom for your stay.",
+      summary: "Private king bedroom with ensuite bath, air conditioning, and garden veranda access.",
       description:
-        "The master bedroom suite features hand-crafted teak furniture, an ensuite marble bath with rain shower, direct garden veranda access, and dedicated high-speed desk workspace.",
+        "Three king bedrooms, each with a private attached bathroom (hot water), air conditioning, and fast Wi-Fi throughout. Handcrafted with Rajasthani textiles, crochet details, and antique touches.",
       coverImage:
         "/images/bedroom-1/imgi_415_8378c683-e395-419a-87b9-e764d4d7a670.jpg",
       isFeatured: false,
@@ -107,7 +117,12 @@ async function main() {
 
   await prisma.listingOption.upsert({
     where: { slug: "courtyard-wing" },
-    update: {},
+    update: {
+      title: "2 Bedrooms",
+      summary: "Two private king bedrooms with attached bathrooms, living room, and front veranda.",
+      description:
+        "Two king bedrooms, each with a private attached bathroom (hot water), air conditioning, and fast Wi-Fi throughout. Access to large living room and private veranda. Ideal for families and small groups.",
+    },
     create: {
       propertyId: property.id,
       inventoryGroupId: inventoryGroup.id,
@@ -120,9 +135,9 @@ async function main() {
       weekendPricePerNight: 18500.0,
       cleaningFee: 1000.0,
       taxPercentage: 12.0,
-      summary: "More space and comfort for families and small groups.",
+      summary: "Two private king bedrooms with attached bathrooms, living room, and front veranda.",
       description:
-        "Two interconnected luxury bedrooms framing the central plunge pool. Ideal for small families or travelling couples seeking shared social spaces with private individual sleeping sanctuaries.",
+        "Two king bedrooms, each with a private attached bathroom (hot water), air conditioning, and fast Wi-Fi throughout. Access to large living room and private veranda. Ideal for families and small groups.",
       coverImage:
         "/images/bedroom-2/imgi_425_675facbb-fb3d-4ca8-a7e3-f18a8d77ab54.jpg",
       isFeatured: false,
@@ -132,7 +147,12 @@ async function main() {
 
   const config3 = await prisma.listingOption.upsert({
     where: { slug: "full-estate-buyout" },
-    update: {},
+    update: {
+      title: "Whole Villa",
+      summary: "Your own private 3BHK villa in Central Jaipur (Raja Park) — 3 king bedrooms, 3 bathrooms, large living room, full kitchen, dining area, veranda & parking.",
+      description:
+        "Dev Stays (@devstays.jaipur) is your own private villa in the heart of Jaipur - no shared spaces, no other guests. Just your group, your home, your rules. Three king bedrooms, each with private attached bath (hot water), full kitchen, living room with 3 sofas, dining area, front veranda with old tree & parking for 3-4 cars.",
+    },
     create: {
       propertyId: property.id,
       inventoryGroupId: inventoryGroup.id,
@@ -145,9 +165,9 @@ async function main() {
       weekendPricePerNight: 32000.0,
       cleaningFee: 2000.0,
       taxPercentage: 18.0,
-      summary: "Enjoy the entire property with complete privacy.",
+      summary: "Your own private 3BHK villa in Central Jaipur (Raja Park) — 3 king bedrooms, 3 bathrooms, large living room, full kitchen, dining area, veranda & parking.",
       description:
-        "Exclusive buyout of the entire estate: all three bedroom suites, the private heated plunge pool, grand living salon, open chef's kitchen, dining hall, and rooftop stargazing terrace. Full private staffing and dedicated security included.",
+        "Dev Stays (@devstays.jaipur) is your own private villa in the heart of Jaipur - no shared spaces, no other guests. Just your group, your home, your rules. Three king bedrooms, each with private attached bath (hot water), full kitchen, living room with 3 sofas, dining area, front veranda with old tree & parking for 3-4 cars.",
       coverImage:
         "/images/living-room/imgi_491_9b8ea86b-c2d1-4327-a5dc-0204663820d1.jpg",
       isFeatured: true,
@@ -158,40 +178,60 @@ async function main() {
   console.log("Listing Configurations seeded (3 configurations).");
 
   // 5. Seed Amenities
+  await prisma.amenity.deleteMany({ where: { propertyId: property.id } });
+
   const amenities = [
     {
-      name: "Courtyard Plunge Pool",
-      description: "Heated & sun-dappled courtyard plunge pool",
-      iconName: "pool",
-      category: "luxury",
-    },
-    {
-      name: "Dual 300 Mbps Wi-Fi",
-      description: "Enterprise mesh Wi-Fi coverage across all rooms & courtyards",
-      iconName: "wifi",
-      category: "work",
-    },
-    {
-      name: "Resident Chef & Modern Kitchen",
-      description: "Authentic Rajasthani & Continental meals freshly prepared",
+      name: "Fully Equipped Kitchen & Menu",
+      description: "Gas stove, fridge, RO purifier, microwave, cooking essentials & on-site food ordering",
       iconName: "restaurant",
       category: "dining",
     },
     {
-      name: "Tranquil Garden Terraces",
-      description: "Rooftop sunset views over Civil Lines diplomatic enclave",
+      name: "Fast Wi-Fi Throughout",
+      description: "High-speed Wi-Fi across all bedrooms, living room & front veranda",
+      iconName: "wifi",
+      category: "work",
+    },
+    {
+      name: "Private Veranda & Old Tree",
+      description: "Street-facing veranda with plants & seating — perfect for morning chai",
       iconName: "yard",
       category: "outdoor",
     },
     {
-      name: "Secure Private Parking",
-      description: "Gated on-premises EV-capable spots with 24/7 security",
+      name: "Free Parking (3-4 Cars)",
+      description: "Dedicated parking for 3-4 cars inside the gated property",
       iconName: "local_parking",
       category: "facilities",
     },
     {
-      name: "24/7 Gated Security",
-      description: "Concierge & discreet exterior CCTV protection",
+      name: "Pet Friendly Sanctuary",
+      description: "We love hosting fur babies! Spacious and welcoming to pets",
+      iconName: "pets",
+      category: "lifestyle",
+    },
+    {
+      name: "Board Games & Badminton",
+      description: "Board games, badminton & outdoor activities available for guests",
+      iconName: "sports_tennis",
+      category: "activities",
+    },
+    {
+      name: "Celebrations & Events",
+      description: "Birthdays, anniversaries, work offsites & get-togethers welcome",
+      iconName: "celebration",
+      category: "events",
+    },
+    {
+      name: "Coffee Always on the House",
+      description: "Complimentary coffee brewed with love by host Aparna",
+      iconName: "coffee",
+      category: "hospitality",
+    },
+    {
+      name: "Self Check-in & Security",
+      description: "Self check-in via building staff, exterior CCTV & smoke alarm",
       iconName: "security",
       category: "safety",
     },

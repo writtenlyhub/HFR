@@ -156,12 +156,12 @@ export function AccommodationDetailView({
                 </span>
                 <span className="text-xs text-neutral-500 flex items-center gap-1">
                   <MapPin size={13} className="text-amber-700" />
-                  <span>Civil Lines, Jaipur</span>
+                  <span>Raja Park, Central Jaipur</span>
                 </span>
                 <span className="text-xs text-neutral-400">•</span>
                 <span className="text-xs text-emerald-700 font-medium flex items-center gap-1">
                   <ShieldCheck size={14} />
-                  <span>Guaranteed Private Estate</span>
+                  <span>No Shared Spaces · 100% Private</span>
                 </span>
               </div>
 
@@ -314,10 +314,10 @@ export function AccommodationDetailView({
                 <ShieldCheck className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
                 <div>
                   <h4 className="font-bold text-neutral-900 text-sm">
-                    The Dev Stays Shared Sanctuary Guarantee
+                    The Dev Stays Private Sanctuary Guarantee
                   </h4>
                   <p className="mt-0.5 leading-relaxed text-neutral-600">
-                    When you reserve this configuration, our automated shared-inventory system exclusively locks the physical estate (<code className="text-xs font-mono font-bold text-neutral-800">DEV-MAIN-ESTATE</code>) for your stay. You will never share the courtyard, plunge pool, or estate grounds with strangers.
+                    When you reserve this configuration, our automated shared-inventory system exclusively locks the physical property (<code className="text-xs font-mono font-bold text-neutral-800">DEV-MAIN-ESTATE</code>) for your stay. You will never share the veranda, living spaces, or villa grounds with strangers.
                   </p>
                 </div>
               </div>
@@ -330,7 +330,7 @@ export function AccommodationDetailView({
                 <div className="text-neutral-700 text-sm sm:text-base leading-relaxed space-y-3 font-light">
                   <p>{room.description}</p>
                   <p>
-                    Nestled within Jaipur’s diplomatic enclave, every architectural detail has been hand-chiseled from local Dholpur sandstone. Guests enjoy high ceilings, authentic Rajasthani jharokha arches, sun-dappled bougainvillea terraces, and seamless access to the heated courtyard plunge pool.
+                    Nestled in a quiet residential lane in Raja Park, every corner has been handcrafted with Rajasthani textiles, crochet details, antique touches, and curated decor. Guests enjoy attached private bathrooms with hot water, air conditioning, fast Wi-Fi throughout, and a street-facing veranda shaded by a mature tree for morning chai.
                   </p>
                 </div>
               </div>
@@ -372,7 +372,7 @@ export function AccommodationDetailView({
                         {room.bedConfiguration || "1 King Bed"}
                       </h4>
                       <p className="text-xs text-neutral-500">
-                        Handcrafted teak bed frame with 400-thread Egyptian cotton linen
+                        Handcrafted king bed with Rajasthani textiles, crochet details, and private attached bath
                       </p>
                     </div>
                   </div>

@@ -191,7 +191,7 @@ export function Header({ session }: HeaderProps) {
               HOTEL FEDERATION RAJASTHAN
             </span>
             <span className="text-[9px] sm:text-[10px] font-semibold tracking-[0.2em] text-neutral-500 uppercase mt-0.5">
-              Dev Stays · Civil Lines Jaipur
+              Dev Stays · Raja Park, Jaipur
             </span>
           </div>
         </Link>

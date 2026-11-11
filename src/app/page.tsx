@@ -60,10 +60,13 @@ export default async function HomePage() {
       <main className="overflow-hidden flex-1">
         <Hero
           startingPrice={startingPrice}
-          headline={property?.name?.toUpperCase() ?? "DEV STAYS JAIPUR"}
+          headline={
+            property?.headline?.toUpperCase() ??
+            "YOUR OWN PRIVATE 3BHK VILLA IN CENTRAL JAIPUR"
+          }
           description={
             property?.description ??
-            "An architectural sanctuary in Jaipur offering independently bookable private suites and exclusive villa buyouts."
+            "Dev Stays (@devstays.jaipur) in Raja Park: 3 king bedrooms, 3 bathrooms, large living room, full kitchen, dining area, front veranda & parking for 3-4 cars. Handcrafted with Rajasthani textiles, crochet details & curated decor."
           }
         />
         <TrustLayer />

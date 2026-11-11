@@ -107,8 +107,8 @@ export function PhotoGallery({ images = [] }: PhotoGalleryProps) {
             Spaces of Dev Stays
           </h2>
           <p className="text-xs sm:text-sm text-neutral-500">
-            Private architectural villa with sunny courtyard in Civil Lines /
-            Raja Park enclave
+            Your own private 3BHK villa in Raja Park with hand-crafted
+            interiors, front veranda &amp; private parking
           </p>
         </div>
 

@@ -15,9 +15,9 @@ const plusJakarta = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Dev Stay, Jaipur | Hotel Federation Rajasthan",
+  title: "Dev Stays Jaipur · Private 3BHK Villa in Raja Park | Hotel Federation Rajasthan",
   description:
-    "An architectural sanctuary in Jaipur offering independently bookable private suites and exclusive villa buyouts with private plunge pool and dedicated concierge.",
+    "Your own private 3BHK villa in Central Jaipur (Raja Park) — 3 king bedrooms, 3 bathrooms, large living room, full kitchen, dining area, veranda & parking for 3-4 cars. Handcrafted with Rajasthani textiles & crochet details.",
 };
 
 export default function RootLayout({

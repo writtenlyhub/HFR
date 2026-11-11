@@ -7,8 +7,8 @@ interface HeroProps {
 
 export function Hero({
   startingPrice = 8500,
-  headline = "DEV STAYS JAIPUR",
-  description = "An architectural sanctuary in Jaipur offering independently bookable private suites and exclusive villa buyouts.",
+  headline = "YOUR OWN PRIVATE 3BHK VILLA IN CENTRAL JAIPUR",
+  description = "Dev Stays (@devstays.jaipur) in Raja Park: 3 king bedrooms, 3 bathrooms, large living room, full kitchen, dining area, front veranda & parking for 3-4 cars. Handcrafted with Rajasthani textiles, crochet details & curated decor.",
 }: HeroProps) {
   const formattedPrice = "₹" + startingPrice.toLocaleString("en-IN");
 
@@ -41,6 +41,11 @@ export function Hero({
 
         {/* Hero Content */}
         <div className="relative z-10 max-w-3xl pt-2">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-[11px] font-semibold tracking-wider uppercase text-stone-200 mb-4">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span>Raja Park · Central Jaipur · No Shared Spaces</span>
+          </div>
+
           <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold uppercase leading-[1.08] tracking-tight mb-4 font-sans">
             {headline}
           </h1>
@@ -51,19 +56,19 @@ export function Hero({
           {/* Feature Badges */}
           <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs sm:text-sm text-stone-200 mb-8 font-medium">
             <span className="px-3 py-1.5 rounded-lg bg-white/10 backdrop-blur-md border border-white/10">
-              3 Bespoke Configurations
+              3 King Bedrooms · 3 Attached Baths
             </span>
             <span className="text-white/40">•</span>
             <span className="px-3 py-1.5 rounded-lg bg-white/10 backdrop-blur-md border border-white/10">
-              1 to 10 Guests
+              Priced for 6 · Hosts up to 15
             </span>
             <span className="text-white/40">•</span>
             <span className="px-3 py-1.5 rounded-lg bg-white/10 backdrop-blur-md border border-white/10">
-              Private Courtyard Plunge Pool
+              Veranda & Parking for 3-4 Cars
             </span>
             <span className="text-white/40">•</span>
             <span className="px-3 py-1.5 rounded-lg bg-white/10 backdrop-blur-md border border-white/10">
-              Chef on Demand
+              Pet Friendly · Full Kitchen
             </span>
           </div>
 
@@ -115,11 +120,11 @@ export function Hero({
           </div>
           <div className="border-l border-gray-200 pl-3">
             <div className="text-xs font-bold leading-tight flex items-center gap-1">
-              <span>Superhost Rated 4.98</span>
+              <span>Superhost Rated 5.0</span>
               <span className="text-amber-500">★</span>
             </div>
             <div className="text-[10px] text-neutral-600 font-semibold mt-0.5">
-              120+ Verified Reviews · Certified Stay
+              18 Reviews · 100% 5-Star Certified
             </div>
           </div>
         </div>

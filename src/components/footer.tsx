@@ -21,11 +21,11 @@ export function Footer() {
               HOTEL FEDERATION RAJASTHAN
             </span>
             <span className="text-[10px] font-semibold tracking-[0.25em] text-neutral-400 uppercase mt-0.5">
-              Dev Stay · Jaipur
+              Dev Stays · Raja Park, Jaipur
             </span>
           </div>
 
-          <div className="text-xs text-neutral-400 space-y-1 pt-2 font-normal">
+          <div className="text-xs text-neutral-400 space-y-1.5 pt-2 font-normal">
             <p className="hover:text-white transition-colors">
               <a href="tel:+911412894400">+91 141 289 4400</a>
             </p>
@@ -34,8 +34,19 @@ export function Footer() {
                 concierge@devstaysjaipur.com
               </a>
             </p>
+            <p className="hover:text-white transition-colors">
+              <a
+                href="https://instagram.com/devstays.jaipur"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-amber-400 hover:text-amber-300 transition-colors flex items-center gap-1"
+              >
+                <span>Instagram: @devstays.jaipur</span>
+                <span>↗</span>
+              </a>
+            </p>
             <p className="text-neutral-500">
-              Civil Lines & Raja Park Enclave, Jaipur, Rajasthan 302006, India
+              Raja Park, Central Jaipur, Rajasthan 302004, India
             </p>
           </div>
         </div>

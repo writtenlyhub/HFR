@@ -62,7 +62,7 @@ export function Accommodations({ options, onSelectOption }: AccommodationsProps)
         <div className="mt-4 inline-flex items-center gap-2 bg-stone-100 border border-stone-200/80 px-4 py-1.5 rounded-full text-xs text-stone-700">
           <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
           <span>
-            <strong>Guaranteed Exclusive Sanctuary:</strong> Whichever configuration you book, the estate remains completely private for your dates.
+            <strong>No Shared Spaces, No Other Guests:</strong> Whichever configuration you reserve, the property remains 100% exclusive to your group.
           </span>
         </div>
       </div>
@@ -143,7 +143,7 @@ export function Accommodations({ options, onSelectOption }: AccommodationsProps)
                       {opt.bathroomCount} {opt.bathroomCount === 1 ? "Bath" : "Baths"}
                     </span>
                     <span>•</span>
-                    <span>Heated Plunge Pool</span>
+                    <span>Veranda &amp; Kitchen</span>
                   </div>
                 </div>
               </div>

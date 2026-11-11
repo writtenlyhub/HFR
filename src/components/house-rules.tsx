@@ -2,18 +2,18 @@ export function HouseRules() {
   const rules = [
     {
       icon: "🚪",
-      title: "Check-in: 2:00 PM · Checkout: 11:00 AM",
-      desc: "Early check-in and late luggage drop accommodated upon prior request. Seamless arrival assisted by our estate caretaker.",
+      title: "Check-in after 14:00 · Checkout before 11:00",
+      desc: "Self check-in with dedicated on-site building staff. Quiet residential lane in central Raja Park despite being close to vibrant cafes and city attractions.",
     },
     {
-      icon: "🛡️",
-      title: "House Rules & Tranquility",
-      desc: "Quiet hours after 10:00 PM to respect neighboring diplomatic residences. No unauthorized parties or non-registered overnight guests.",
+      icon: "🎉",
+      title: "Celebrations & Small Events Welcome",
+      desc: "Birthday parties, anniversaries, work offsites, and get-togethers are all welcome. Priced for 6 overnight guests; message us to host up to 15 (extra mattresses arranged).",
     },
     {
-      icon: "📅",
-      title: "Flexible Cancellation Policy",
-      desc: "Full refund up to 7 days before check-in. 50% refund between 7 days and 48 hours prior to check-in. Direct booking cancellation guarantees applied.",
+      icon: "🐾",
+      title: "Pet Friendly & Safety Verified",
+      desc: "Pet friendly — we love hosting fur babies! Board games and badminton available. Exterior security cameras on property and smoke alarm installed for your safety.",
     },
   ];
 
@@ -25,10 +25,10 @@ export function HouseRules() {
     >
       <div className="mb-10">
         <span className="text-[11px] font-bold tracking-[0.2em] text-neutral-500 uppercase">
-          Stay Guidelines
+          Good to Know
         </span>
         <h2 className="text-2xl sm:text-3xl font-extrabold uppercase tracking-tight text-neutral-900 mt-1 font-sans">
-          Important guest information
+          House rules &amp; stay details
         </h2>
       </div>
 
@@ -42,7 +42,7 @@ export function HouseRules() {
               {r.icon}
             </div>
             <h4 className="text-sm font-bold text-neutral-900">{r.title}</h4>
-            <p className="text-xs text-neutral-500 leading-relaxed">{r.desc}</p>
+            <p className="text-xs text-neutral-600 leading-relaxed">{r.desc}</p>
           </div>
         ))}
       </div>

@@ -36,8 +36,11 @@ export function MeetHost() {
                 Aparna
               </h3>
               <div className="text-xs text-neutral-500 font-semibold flex items-center gap-1 mt-0.5">
-                <span>Superhost · 12+ Years Hosting</span>
+                <span>Superhost · 12 Years Hosting</span>
               </div>
+              <p className="text-[11px] text-amber-800 font-medium mt-1">
+                Hospitality &amp; Crochet Artist
+              </p>
             </div>
           </div>
 
@@ -45,7 +48,7 @@ export function MeetHost() {
           <div className="grid grid-cols-3 gap-4 pt-6 text-center">
             <div>
               <div className="text-xl font-bold text-neutral-900 leading-none">
-                120+
+                18
               </div>
               <div className="text-[10px] text-neutral-500 uppercase tracking-wider mt-1">
                 Reviews
@@ -53,7 +56,7 @@ export function MeetHost() {
             </div>
             <div className="border-x border-neutral-200">
               <div className="text-xl font-bold text-neutral-900 leading-none">
-                4.98★
+                5.0★
               </div>
               <div className="text-[10px] text-neutral-500 uppercase tracking-wider mt-1">
                 Rating
@@ -61,11 +64,29 @@ export function MeetHost() {
             </div>
             <div>
               <div className="text-xl font-bold text-neutral-900 leading-none">
-                12+
+                30+
               </div>
               <div className="text-[10px] text-neutral-500 uppercase tracking-wider mt-1">
-                Years Hosting
+                Yrs in Hospitality
               </div>
+            </div>
+          </div>
+
+          {/* Host Quick Details */}
+          <div className="mt-6 pt-5 border-t border-neutral-100 space-y-2 text-xs text-neutral-600">
+            <div className="flex items-center justify-between">
+              <span className="text-neutral-500">Response Rate:</span>
+              <span className="font-bold text-neutral-900">100%</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-neutral-500">Response Time:</span>
+              <span className="font-bold text-neutral-900">Within an hour</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-neutral-500">Fun Fact:</span>
+              <span className="font-medium text-neutral-800">
+                I make the cutest crochet accessories
+              </span>
             </div>
           </div>
         </div>
@@ -74,19 +95,23 @@ export function MeetHost() {
         <div className="lg:col-span-7 space-y-6">
           <div>
             <h4 className="text-lg font-bold text-neutral-900">
-              Namaste! Welcome to Dev Stays Jaipur
+              Namaste! Welcome to Dev Stays in Raja Park, Jaipur
             </h4>
             <p className="text-xs sm:text-sm text-neutral-600 mt-2 leading-relaxed">
-              With over 12 years dedicated to Rajasthani luxury hospitality, my
-              team and I crafted Dev Stays to offer travelers an authentic,
-              stress-free haven. Coffee is always brewing, and our co-host
-              Saksham and I ensure every aspect of your stay is effortless.
+              I’m Aparna :) After 30+ years in hospitality, I’ve opened a cozy
+              home in Jaipur for everyone. I&apos;ve travelled around the country
+              and I love meeting new people — <strong>coffee is always on the house!</strong>
+            </p>
+            <p className="text-xs sm:text-sm text-neutral-600 mt-2 leading-relaxed">
+              Reach out to me to enjoy Jaipur like a local: drivers, cab support,
+              local guides, custom Jaipur itineraries — anything that you need at all,
+              just ask.
             </p>
           </div>
 
-          <div>
+          <div className="p-4 bg-white rounded-2xl border border-neutral-200">
             <h5 className="text-xs font-bold text-neutral-900 uppercase tracking-wider mb-2">
-              Dedicated Co-Host
+              Dedicated Co-Host &amp; Concierge
             </h5>
             <div className="flex items-center gap-3">
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -100,7 +125,7 @@ export function MeetHost() {
                   Saksham
                 </span>
                 <span className="text-xs text-neutral-500">
-                  Concierge & Guest Experience Lead
+                  Concierge &amp; Guest Experience Lead
                 </span>
               </div>
             </div>
@@ -108,12 +133,21 @@ export function MeetHost() {
 
           <div className="flex items-center gap-4 pt-2">
             <a
-              className="bg-black hover:bg-neutral-800 text-white text-xs uppercase tracking-wider font-semibold px-6 py-3 rounded-xl transition-colors shadow-sm inline-flex items-center gap-2"
+              className="bg-black hover:bg-neutral-800 text-white text-xs uppercase tracking-wider font-semibold px-6 py-3.5 rounded-full transition-colors shadow-sm inline-flex items-center gap-2"
               href="https://wa.me/911412894400"
               target="_blank"
               rel="noopener noreferrer"
             >
-              <span>Message Concierge on WhatsApp</span>
+              <span>Message Host on WhatsApp</span>
+              <span>↗</span>
+            </a>
+            <a
+              className="border border-neutral-300 hover:border-black text-neutral-800 hover:text-black text-xs uppercase tracking-wider font-semibold px-5 py-3.5 rounded-full transition-colors inline-flex items-center gap-1.5"
+              href="https://instagram.com/devstays.jaipur"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <span>Follow @devstays.jaipur</span>
               <span>↗</span>
             </a>
           </div>
