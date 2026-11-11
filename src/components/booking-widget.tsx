@@ -14,6 +14,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Calendar,
+  RotateCcw,
 } from "lucide-react";
 
 export interface ListingOptionBrief {
@@ -123,11 +124,14 @@ export function BookingWidget({
     };
   } | null>(null);
 
-  // Inline calendar state
+  // Inline calendar & comfortable date picker state
   const [calendarMonth, setCalendarMonth] = useState(() => {
     const initDate = defaultCheckIn ? new Date(`${defaultCheckIn}T00:00:00`) : new Date();
     return new Date(initDate.getFullYear(), initDate.getMonth(), 1);
   });
+  const [activePicker, setActivePicker] = useState<"checkIn" | "checkOut">("checkIn");
+  const [hoverDate, setHoverDate] = useState<string | null>(null);
+  const [showNativeInputs, setShowNativeInputs] = useState(false);
 
   // Inline Hold Form state (no popup modal!)
   const [showInlineHoldForm, setShowInlineHoldForm] = useState(false);
@@ -453,13 +457,15 @@ export function BookingWidget({
   }
   const todayStr = new Date().toISOString().split("T")[0];
 
-  const formatDisplayDate = (dateStr: string) => {
+  const formatFullDate = (dateStr: string) => {
     if (!dateStr) return "Select date";
     const [y, m, d] = dateStr.split("-").map(Number);
     const date = new Date(y, m - 1, d);
     return date.toLocaleDateString("en-IN", {
+      weekday: "short",
       day: "numeric",
       month: "short",
+      year: "numeric",
     });
   };
 
@@ -483,16 +489,51 @@ export function BookingWidget({
     );
   };
 
+  const applyNightsDuration = (nights: number) => {
+    const baseDateStr = checkIn || todayStr;
+    if (!checkIn) {
+      setCheckIn(baseDateStr);
+    }
+    const [y, m, d] = baseDateStr.split("-").map(Number);
+    const outDate = new Date(y, m - 1, d + nights);
+    const outY = outDate.getFullYear();
+    const outM = String(outDate.getMonth() + 1).padStart(2, "0");
+    const outD = String(outDate.getDate()).padStart(2, "0");
+    setCheckOut(`${outY}-${outM}-${outD}`);
+    setActivePicker("checkOut");
+  };
+
   const handleDateClick = (dateStr: string) => {
-    if (!checkIn || (checkIn && checkOut)) {
+    if (activePicker === "checkIn") {
       setCheckIn(dateStr);
-      setCheckOut("");
-      setAvailabilityData(null);
-    } else if (checkIn && !checkOut) {
-      if (dateStr <= checkIn) {
+      // If checkOut exists and is strictly after the new checkIn, keep it!
+      if (checkOut && checkOut > dateStr) {
+        setActivePicker("checkOut");
+      } else {
+        // Automatically set checkout to next day so user immediately has a valid preview
+        const [y, m, d] = dateStr.split("-").map(Number);
+        const nextD = new Date(y, m - 1, d + 1);
+        const nextStr = `${nextD.getFullYear()}-${String(nextD.getMonth() + 1).padStart(2, "0")}-${String(nextD.getDate()).padStart(2, "0")}`;
+        setCheckOut(nextStr);
+        setActivePicker("checkOut");
+      }
+    } else {
+      // activePicker === 'checkOut'
+      if (!checkIn) {
         setCheckIn(dateStr);
-        setCheckOut("");
-        setAvailabilityData(null);
+        const [y, m, d] = dateStr.split("-").map(Number);
+        const nextD = new Date(y, m - 1, d + 1);
+        const nextStr = `${nextD.getFullYear()}-${String(nextD.getMonth() + 1).padStart(2, "0")}-${String(nextD.getDate()).padStart(2, "0")}`;
+        setCheckOut(nextStr);
+        setActivePicker("checkOut");
+      } else if (dateStr <= checkIn) {
+        // Comfortably treat as new checkIn and adjust checkout to next day
+        setCheckIn(dateStr);
+        const [y, m, d] = dateStr.split("-").map(Number);
+        const nextD = new Date(y, m - 1, d + 1);
+        const nextStr = `${nextD.getFullYear()}-${String(nextD.getMonth() + 1).padStart(2, "0")}-${String(nextD.getDate()).padStart(2, "0")}`;
+        setCheckOut(nextStr);
+        setActivePicker("checkOut");
       } else {
         setCheckOut(dateStr);
       }
@@ -769,36 +810,180 @@ export function BookingWidget({
               </div>
             </div>
 
+            {/* Dual Interactive Date Cards: CHECK-IN & CHECKOUT */}
+            <div className="grid grid-cols-2 gap-2.5">
+              {/* Check-In Card */}
+              <button
+                type="button"
+                onClick={() => {
+                  setActivePicker("checkIn");
+                  if (checkIn) {
+                    const [y, m] = checkIn.split("-").map(Number);
+                    setCalendarMonth(new Date(y, m - 1, 1));
+                  }
+                }}
+                className={`p-3 rounded-2xl border text-left transition-all relative flex flex-col justify-between cursor-pointer ${
+                  activePicker === "checkIn"
+                    ? "bg-neutral-900 text-white border-neutral-900 shadow-md ring-2 ring-neutral-900/30"
+                    : "bg-[#FCFCFC] hover:bg-neutral-50 text-neutral-900 border-neutral-200"
+                }`}
+              >
+                <div className="flex items-center justify-between w-full">
+                  <span
+                    className={`text-[9px] font-extrabold uppercase tracking-wider ${
+                      activePicker === "checkIn"
+                        ? "text-neutral-300"
+                        : "text-neutral-500"
+                    }`}
+                  >
+                    CHECK-IN
+                  </span>
+                  <span
+                    className={`text-[9px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider ${
+                      activePicker === "checkIn"
+                        ? "bg-amber-400 text-black"
+                        : "bg-neutral-100 text-neutral-600"
+                    }`}
+                  >
+                    {activePicker === "checkIn" ? "Selecting" : "In"}
+                  </span>
+                </div>
+                <div className="pt-2">
+                  <p className="text-xs sm:text-sm font-bold truncate">
+                    {checkIn ? formatFullDate(checkIn) : "Select date"}
+                  </p>
+                  <p
+                    className={`text-[10px] mt-0.5 ${
+                      activePicker === "checkIn"
+                        ? "text-neutral-300"
+                        : "text-neutral-500"
+                    }`}
+                  >
+                    From 14:00 PM
+                  </p>
+                </div>
+              </button>
+
+              {/* Checkout Card */}
+              <button
+                type="button"
+                onClick={() => {
+                  setActivePicker("checkOut");
+                  if (checkOut) {
+                    const [y, m] = checkOut.split("-").map(Number);
+                    setCalendarMonth(new Date(y, m - 1, 1));
+                  } else if (checkIn) {
+                    const [y, m] = checkIn.split("-").map(Number);
+                    setCalendarMonth(new Date(y, m - 1, 1));
+                  }
+                }}
+                className={`p-3 rounded-2xl border text-left transition-all relative flex flex-col justify-between cursor-pointer ${
+                  activePicker === "checkOut"
+                    ? "bg-neutral-900 text-white border-neutral-900 shadow-md ring-2 ring-neutral-900/30"
+                    : "bg-[#FCFCFC] hover:bg-neutral-50 text-neutral-900 border-neutral-200"
+                }`}
+              >
+                <div className="flex items-center justify-between w-full">
+                  <span
+                    className={`text-[9px] font-extrabold uppercase tracking-wider ${
+                      activePicker === "checkOut"
+                        ? "text-neutral-300"
+                        : "text-neutral-500"
+                    }`}
+                  >
+                    CHECKOUT
+                  </span>
+                  <span
+                    className={`text-[9px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider ${
+                      activePicker === "checkOut"
+                        ? "bg-amber-400 text-black"
+                        : "bg-neutral-100 text-neutral-600"
+                    }`}
+                  >
+                    {activePicker === "checkOut" ? "Selecting" : "Out"}
+                  </span>
+                </div>
+                <div className="pt-2">
+                  <p className="text-xs sm:text-sm font-bold truncate">
+                    {checkOut ? formatFullDate(checkOut) : "Select date"}
+                  </p>
+                  <p
+                    className={`text-[10px] mt-0.5 ${
+                      activePicker === "checkOut"
+                        ? "text-neutral-300"
+                        : "text-neutral-500"
+                    }`}
+                  >
+                    By 11:00 AM
+                  </p>
+                </div>
+              </button>
+            </div>
+
+            {/* Quick Stay Presets */}
+            <div className="flex items-center gap-1.5 overflow-x-auto py-1 scrollbar-none text-[11px]">
+              <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider shrink-0 mr-0.5">
+                Stay:
+              </span>
+              {[
+                { label: "+1 Nt", nights: 1 },
+                { label: "+2 Nts", nights: 2 },
+                { label: "+3 Nts", nights: 3 },
+                { label: "+5 Nts", nights: 5 },
+                { label: "+7 Nts", nights: 7 },
+              ].map((preset) => (
+                <button
+                  key={preset.nights}
+                  type="button"
+                  onClick={() => applyNightsDuration(preset.nights)}
+                  className={`px-2.5 py-1 rounded-lg border font-semibold shrink-0 transition-all cursor-pointer ${
+                    selectedNights === preset.nights
+                      ? "bg-neutral-950 text-white border-neutral-950 shadow-2xs"
+                      : "bg-stone-50 hover:bg-neutral-100 text-neutral-700 border-neutral-200"
+                  }`}
+                >
+                  {preset.label}
+                </button>
+              ))}
+              {(checkIn || checkOut) && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCheckIn("");
+                    setCheckOut("");
+                    setActivePicker("checkIn");
+                    setAvailabilityData(null);
+                  }}
+                  className="px-2 py-1 text-[10px] text-neutral-500 hover:text-red-600 font-semibold shrink-0 transition-colors cursor-pointer flex items-center gap-1"
+                  title="Reset dates"
+                >
+                  <RotateCcw size={10} />
+                  <span>Reset</span>
+                </button>
+              )}
+            </div>
+
             {/* Bespoke Interactive Inline Calendar */}
             <div className="p-3.5 bg-white rounded-2xl border border-neutral-200/90 shadow-2xs space-y-3">
-              {/* Selected Dates Summary Bar */}
-              <div className="flex items-center justify-between pb-2.5 border-b border-neutral-100">
-                <div className="flex items-center gap-1.5 text-xs">
+              {/* Active Selection Mode & Nights Pill */}
+              <div className="flex items-center justify-between pb-2 border-b border-neutral-100">
+                <div className="flex items-center gap-1.5 text-xs font-semibold text-neutral-800">
                   <span
-                    className={`px-2 py-0.5 rounded-md text-[11px] font-bold transition-all ${
-                      checkIn && !checkOut
-                        ? "bg-amber-100 text-amber-950 ring-2 ring-amber-400/80"
-                        : "bg-neutral-100 text-neutral-800"
+                    className={`w-2 h-2 rounded-full ${
+                      activePicker === "checkIn"
+                        ? "bg-amber-500 animate-pulse"
+                        : "bg-emerald-500"
                     }`}
-                  >
-                    In: {checkIn ? formatDisplayDate(checkIn) : "Check-in"}
-                  </span>
-                  <span className="text-neutral-400 text-xs">→</span>
-                  <span
-                    className={`px-2 py-0.5 rounded-md text-[11px] font-bold transition-all ${
-                      checkIn && !checkOut
-                        ? "bg-neutral-50 text-neutral-400 border border-dashed border-neutral-300"
-                        : checkOut
-                        ? "bg-neutral-100 text-neutral-800"
-                        : "bg-neutral-100 text-neutral-400"
-                    }`}
-                  >
-                    Out: {checkOut ? formatDisplayDate(checkOut) : "Checkout"}
+                  />
+                  <span>
+                    {activePicker === "checkIn"
+                      ? "Select Check-In date below"
+                      : "Select Checkout date below"}
                   </span>
                 </div>
                 {selectedNights > 0 && (
                   <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200/60 shrink-0">
-                    {selectedNights} {selectedNights === 1 ? "Night" : "Nights"}
+                    {selectedNights} {selectedNights === 1 ? "Night" : "Nights"} Stay
                   </span>
                 )}
               </div>
@@ -836,7 +1021,9 @@ export function BookingWidget({
                 {["M", "T", "W", "T", "F", "S", "S"].map((d, i) => (
                   <span
                     key={i}
-                    className="text-[10px] font-bold text-neutral-400 py-0.5"
+                    className={`text-[10px] font-bold py-0.5 ${
+                      i >= 5 ? "text-amber-800/80" : "text-neutral-400"
+                    }`}
                   >
                     {d}
                   </span>
@@ -855,14 +1042,25 @@ export function BookingWidget({
                   const isEnd = dateStr === checkOut;
                   const isBetween =
                     checkIn && checkOut && dateStr > checkIn && dateStr < checkOut;
+                  const isHovered =
+                    activePicker === "checkOut" &&
+                    checkIn &&
+                    hoverDate &&
+                    hoverDate > checkIn &&
+                    dateStr > checkIn &&
+                    dateStr <= hoverDate;
 
                   return (
                     <div
                       key={dateStr}
-                      className={`h-8 flex items-center justify-center relative ${
-                        isBetween ? "bg-amber-100/70" : ""
+                      className={`h-8 sm:h-9 flex items-center justify-center relative ${
+                        isBetween
+                          ? "bg-amber-100/70"
+                          : isHovered
+                          ? "bg-amber-50"
+                          : ""
                       } ${
-                        isStart && checkOut
+                        isStart && (checkOut || isHovered)
                           ? "bg-gradient-to-r from-transparent to-amber-100/70 rounded-l-full"
                           : ""
                       } ${
@@ -875,11 +1073,15 @@ export function BookingWidget({
                         type="button"
                         disabled={isPast}
                         onClick={() => handleDateClick(dateStr)}
-                        className={`w-7 h-7 flex items-center justify-center text-xs transition-all ${
+                        onMouseEnter={() => setHoverDate(dateStr)}
+                        onMouseLeave={() => setHoverDate(null)}
+                        className={`w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center text-xs transition-all ${
                           isStart || isEnd
                             ? "bg-neutral-950 text-white font-bold rounded-full shadow-sm scale-105 z-10"
                             : isBetween
                             ? "text-amber-950 font-semibold"
+                            : isHovered
+                            ? "text-amber-900 font-semibold"
                             : isPast
                             ? "text-neutral-300 line-through cursor-not-allowed"
                             : "text-neutral-800 hover:bg-neutral-100 rounded-full cursor-pointer font-medium"
@@ -892,27 +1094,64 @@ export function BookingWidget({
                 })}
               </div>
 
-              {/* Interactive Help & Clear Action */}
-              <div className="flex items-center justify-between pt-1 border-t border-neutral-100 text-[10px] text-neutral-500">
-                <span>
-                  {checkIn && !checkOut
-                    ? "Select checkout date"
-                    : "Click date to change stay"}
+              {/* Native inputs fallback toggle */}
+              <div className="pt-1.5 border-t border-neutral-100 flex items-center justify-between text-[10px] text-neutral-500">
+                <button
+                  type="button"
+                  onClick={() => setShowNativeInputs((s) => !s)}
+                  className="text-neutral-500 hover:text-neutral-900 underline underline-offset-2 cursor-pointer"
+                >
+                  {showNativeInputs
+                    ? "Hide date input fields"
+                    : "Type or choose with date inputs"}
+                </button>
+                <span className="text-[10px] text-neutral-400">
+                  All dates in IST (UTC+5:30)
                 </span>
-                {(checkIn || checkOut) && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setCheckIn("");
-                      setCheckOut("");
-                      setAvailabilityData(null);
-                    }}
-                    className="text-amber-800 hover:underline font-semibold cursor-pointer"
-                  >
-                    Reset Dates
-                  </button>
-                )}
               </div>
+
+              {/* Collapsible Native Inputs for typing/browser date picking */}
+              {showNativeInputs && (
+                <div className="grid grid-cols-2 gap-2 pt-2 border-t border-neutral-100 animate-fade-in">
+                  <div>
+                    <label className="block text-[9px] font-bold uppercase tracking-wider text-neutral-500 mb-1">
+                      Check-in input
+                    </label>
+                    <input
+                      type="date"
+                      value={checkIn}
+                      min={todayStr}
+                      onChange={(e) => {
+                        setCheckIn(e.target.value);
+                        if (checkOut && e.target.value >= checkOut) {
+                          const [y, m, d] = e.target.value.split("-").map(Number);
+                          const nextD = new Date(y, m - 1, d + 1);
+                          const nextStr = `${nextD.getFullYear()}-${String(
+                            nextD.getMonth() + 1
+                          ).padStart(2, "0")}-${String(nextD.getDate()).padStart(
+                            2,
+                            "0"
+                          )}`;
+                          setCheckOut(nextStr);
+                        }
+                      }}
+                      className="w-full text-xs p-2 rounded-lg border border-neutral-200 focus:border-black focus:outline-none bg-neutral-50 font-medium"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[9px] font-bold uppercase tracking-wider text-neutral-500 mb-1">
+                      Checkout input
+                    </label>
+                    <input
+                      type="date"
+                      value={checkOut}
+                      min={checkIn || todayStr}
+                      onChange={(e) => setCheckOut(e.target.value)}
+                      className="w-full text-xs p-2 rounded-lg border border-neutral-200 focus:border-black focus:outline-none bg-neutral-50 font-medium"
+                    />
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Live Availability Status */}
