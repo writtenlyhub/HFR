@@ -48,3 +48,4 @@ Img/
 
 # Keep .env.example
 !.env.example
+.neon
