@@ -124,14 +124,14 @@ export function BookingWidget({
     };
   } | null>(null);
 
-  // Inline calendar & comfortable date picker state
+  // Inline calendar & collapsible date picker state
   const [calendarMonth, setCalendarMonth] = useState(() => {
     const initDate = defaultCheckIn ? new Date(`${defaultCheckIn}T00:00:00`) : new Date();
     return new Date(initDate.getFullYear(), initDate.getMonth(), 1);
   });
   const [activePicker, setActivePicker] = useState<"checkIn" | "checkOut">("checkIn");
   const [hoverDate, setHoverDate] = useState<string | null>(null);
-  const [showNativeInputs, setShowNativeInputs] = useState(false);
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
   // Inline Hold Form state (no popup modal!)
   const [showInlineHoldForm, setShowInlineHoldForm] = useState(false);
@@ -489,20 +489,6 @@ export function BookingWidget({
     );
   };
 
-  const applyNightsDuration = (nights: number) => {
-    const baseDateStr = checkIn || todayStr;
-    if (!checkIn) {
-      setCheckIn(baseDateStr);
-    }
-    const [y, m, d] = baseDateStr.split("-").map(Number);
-    const outDate = new Date(y, m - 1, d + nights);
-    const outY = outDate.getFullYear();
-    const outM = String(outDate.getMonth() + 1).padStart(2, "0");
-    const outD = String(outDate.getDate()).padStart(2, "0");
-    setCheckOut(`${outY}-${outM}-${outD}`);
-    setActivePicker("checkOut");
-  };
-
   const handleDateClick = (dateStr: string) => {
     if (activePicker === "checkIn") {
       setCheckIn(dateStr);
@@ -536,6 +522,8 @@ export function BookingWidget({
         setActivePicker("checkOut");
       } else {
         setCheckOut(dateStr);
+        // Automatically close calendar once date selection is completed
+        setIsCalendarOpen(false);
       }
     }
   };
@@ -816,22 +804,27 @@ export function BookingWidget({
               <button
                 type="button"
                 onClick={() => {
-                  setActivePicker("checkIn");
-                  if (checkIn) {
-                    const [y, m] = checkIn.split("-").map(Number);
-                    setCalendarMonth(new Date(y, m - 1, 1));
+                  if (isCalendarOpen && activePicker === "checkIn") {
+                    setIsCalendarOpen(false);
+                  } else {
+                    setIsCalendarOpen(true);
+                    setActivePicker("checkIn");
+                    if (checkIn) {
+                      const [y, m] = checkIn.split("-").map(Number);
+                      setCalendarMonth(new Date(y, m - 1, 1));
+                    }
                   }
                 }}
                 className={`p-3 rounded-2xl border text-left transition-all relative flex flex-col justify-between cursor-pointer ${
-                  activePicker === "checkIn"
+                  isCalendarOpen && activePicker === "checkIn"
                     ? "bg-neutral-900 text-white border-neutral-900 shadow-md ring-2 ring-neutral-900/30"
-                    : "bg-[#FCFCFC] hover:bg-neutral-50 text-neutral-900 border-neutral-200"
+                    : "bg-[#FCFCFC] hover:bg-neutral-50 text-neutral-900 border-neutral-200 hover:border-neutral-400"
                 }`}
               >
                 <div className="flex items-center justify-between w-full">
                   <span
                     className={`text-[9px] font-extrabold uppercase tracking-wider ${
-                      activePicker === "checkIn"
+                      isCalendarOpen && activePicker === "checkIn"
                         ? "text-neutral-300"
                         : "text-neutral-500"
                     }`}
@@ -839,13 +832,14 @@ export function BookingWidget({
                     CHECK-IN
                   </span>
                   <span
-                    className={`text-[9px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider ${
-                      activePicker === "checkIn"
+                    className={`text-[9px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider flex items-center gap-1 ${
+                      isCalendarOpen && activePicker === "checkIn"
                         ? "bg-amber-400 text-black"
                         : "bg-neutral-100 text-neutral-600"
                     }`}
                   >
-                    {activePicker === "checkIn" ? "Selecting" : "In"}
+                    <span>{isCalendarOpen && activePicker === "checkIn" ? "Selecting" : "In"}</span>
+                    <Calendar size={10} />
                   </span>
                 </div>
                 <div className="pt-2">
@@ -854,7 +848,7 @@ export function BookingWidget({
                   </p>
                   <p
                     className={`text-[10px] mt-0.5 ${
-                      activePicker === "checkIn"
+                      isCalendarOpen && activePicker === "checkIn"
                         ? "text-neutral-300"
                         : "text-neutral-500"
                     }`}
@@ -868,25 +862,30 @@ export function BookingWidget({
               <button
                 type="button"
                 onClick={() => {
-                  setActivePicker("checkOut");
-                  if (checkOut) {
-                    const [y, m] = checkOut.split("-").map(Number);
-                    setCalendarMonth(new Date(y, m - 1, 1));
-                  } else if (checkIn) {
-                    const [y, m] = checkIn.split("-").map(Number);
-                    setCalendarMonth(new Date(y, m - 1, 1));
+                  if (isCalendarOpen && activePicker === "checkOut") {
+                    setIsCalendarOpen(false);
+                  } else {
+                    setIsCalendarOpen(true);
+                    setActivePicker("checkOut");
+                    if (checkOut) {
+                      const [y, m] = checkOut.split("-").map(Number);
+                      setCalendarMonth(new Date(y, m - 1, 1));
+                    } else if (checkIn) {
+                      const [y, m] = checkIn.split("-").map(Number);
+                      setCalendarMonth(new Date(y, m - 1, 1));
+                    }
                   }
                 }}
                 className={`p-3 rounded-2xl border text-left transition-all relative flex flex-col justify-between cursor-pointer ${
-                  activePicker === "checkOut"
+                  isCalendarOpen && activePicker === "checkOut"
                     ? "bg-neutral-900 text-white border-neutral-900 shadow-md ring-2 ring-neutral-900/30"
-                    : "bg-[#FCFCFC] hover:bg-neutral-50 text-neutral-900 border-neutral-200"
+                    : "bg-[#FCFCFC] hover:bg-neutral-50 text-neutral-900 border-neutral-200 hover:border-neutral-400"
                 }`}
               >
                 <div className="flex items-center justify-between w-full">
                   <span
                     className={`text-[9px] font-extrabold uppercase tracking-wider ${
-                      activePicker === "checkOut"
+                      isCalendarOpen && activePicker === "checkOut"
                         ? "text-neutral-300"
                         : "text-neutral-500"
                     }`}
@@ -894,13 +893,14 @@ export function BookingWidget({
                     CHECKOUT
                   </span>
                   <span
-                    className={`text-[9px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider ${
-                      activePicker === "checkOut"
+                    className={`text-[9px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider flex items-center gap-1 ${
+                      isCalendarOpen && activePicker === "checkOut"
                         ? "bg-amber-400 text-black"
                         : "bg-neutral-100 text-neutral-600"
                     }`}
                   >
-                    {activePicker === "checkOut" ? "Selecting" : "Out"}
+                    <span>{isCalendarOpen && activePicker === "checkOut" ? "Selecting" : "Out"}</span>
+                    <Calendar size={10} />
                   </span>
                 </div>
                 <div className="pt-2">
@@ -909,7 +909,7 @@ export function BookingWidget({
                   </p>
                   <p
                     className={`text-[10px] mt-0.5 ${
-                      activePicker === "checkOut"
+                      isCalendarOpen && activePicker === "checkOut"
                         ? "text-neutral-300"
                         : "text-neutral-500"
                     }`}
@@ -920,239 +920,173 @@ export function BookingWidget({
               </button>
             </div>
 
-            {/* Quick Stay Presets */}
-            <div className="flex items-center gap-1.5 overflow-x-auto py-1 scrollbar-none text-[11px]">
-              <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider shrink-0 mr-0.5">
-                Stay:
-              </span>
-              {[
-                { label: "+1 Nt", nights: 1 },
-                { label: "+2 Nts", nights: 2 },
-                { label: "+3 Nts", nights: 3 },
-                { label: "+5 Nts", nights: 5 },
-                { label: "+7 Nts", nights: 7 },
-              ].map((preset) => (
-                <button
-                  key={preset.nights}
-                  type="button"
-                  onClick={() => applyNightsDuration(preset.nights)}
-                  className={`px-2.5 py-1 rounded-lg border font-semibold shrink-0 transition-all cursor-pointer ${
-                    selectedNights === preset.nights
-                      ? "bg-neutral-950 text-white border-neutral-950 shadow-2xs"
-                      : "bg-stone-50 hover:bg-neutral-100 text-neutral-700 border-neutral-200"
-                  }`}
-                >
-                  {preset.label}
-                </button>
-              ))}
-              {(checkIn || checkOut) && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setCheckIn("");
-                    setCheckOut("");
-                    setActivePicker("checkIn");
-                    setAvailabilityData(null);
-                  }}
-                  className="px-2 py-1 text-[10px] text-neutral-500 hover:text-red-600 font-semibold shrink-0 transition-colors cursor-pointer flex items-center gap-1"
-                  title="Reset dates"
-                >
-                  <RotateCcw size={10} />
-                  <span>Reset</span>
-                </button>
-              )}
-            </div>
-
-            {/* Bespoke Interactive Inline Calendar */}
-            <div className="p-3.5 bg-white rounded-2xl border border-neutral-200/90 shadow-2xs space-y-3">
-              {/* Active Selection Mode & Nights Pill */}
-              <div className="flex items-center justify-between pb-2 border-b border-neutral-100">
-                <div className="flex items-center gap-1.5 text-xs font-semibold text-neutral-800">
-                  <span
-                    className={`w-2 h-2 rounded-full ${
-                      activePicker === "checkIn"
-                        ? "bg-amber-500 animate-pulse"
-                        : "bg-emerald-500"
-                    }`}
-                  />
-                  <span>
-                    {activePicker === "checkIn"
-                      ? "Select Check-In date below"
-                      : "Select Checkout date below"}
-                  </span>
+            {/* Interactive Collapsible Calendar: Only visible when clicked on date */}
+            {isCalendarOpen && (
+              <div className="p-3.5 bg-white rounded-2xl border border-neutral-200 shadow-md space-y-3 animate-fade-in transition-all">
+                {/* Active Selection Mode & Nights Pill */}
+                <div className="flex items-center justify-between pb-2 border-b border-neutral-100">
+                  <div className="flex items-center gap-1.5 text-xs font-semibold text-neutral-800">
+                    <span
+                      className={`w-2 h-2 rounded-full ${
+                        activePicker === "checkIn"
+                          ? "bg-amber-500 animate-pulse"
+                          : "bg-emerald-500"
+                      }`}
+                    />
+                    <span>
+                      {activePicker === "checkIn"
+                        ? "Click arrival date below"
+                        : "Click departure date below"}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {selectedNights > 0 && (
+                      <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200/60 shrink-0">
+                        {selectedNights} {selectedNights === 1 ? "Night" : "Nights"} Stay
+                      </span>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => setIsCalendarOpen(false)}
+                      className="text-[11px] font-bold text-neutral-600 hover:text-black px-2 py-0.5 rounded bg-neutral-100 hover:bg-neutral-200 transition-colors cursor-pointer"
+                      title="Done selecting"
+                    >
+                      Done ✕
+                    </button>
+                  </div>
                 </div>
-                {selectedNights > 0 && (
-                  <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200/60 shrink-0">
-                    {selectedNights} {selectedNights === 1 ? "Night" : "Nights"} Stay
-                  </span>
-                )}
-              </div>
 
-              {/* Month Stepper Header */}
-              <div className="flex items-center justify-between px-1">
-                <button
-                  type="button"
-                  onClick={prevMonth}
-                  disabled={
-                    calendarMonth <=
-                    new Date(new Date().getFullYear(), new Date().getMonth(), 1)
-                  }
-                  className="w-7 h-7 rounded-lg hover:bg-neutral-100 disabled:opacity-25 disabled:hover:bg-transparent flex items-center justify-center transition-colors cursor-pointer disabled:cursor-not-allowed"
-                  title="Previous month"
-                >
-                  <ChevronLeft size={16} />
-                </button>
-                <div className="text-xs font-bold text-neutral-900 flex items-center gap-1.5">
-                  <Calendar size={13} className="text-neutral-500" />
-                  <span>{monthName}</span>
-                </div>
-                <button
-                  type="button"
-                  onClick={nextMonth}
-                  className="w-7 h-7 rounded-lg hover:bg-neutral-100 flex items-center justify-center transition-colors cursor-pointer"
-                  title="Next month"
-                >
-                  <ChevronRight size={16} />
-                </button>
-              </div>
-
-              {/* Weekday Labels (Monday to Sunday) */}
-              <div className="grid grid-cols-7 gap-1 text-center">
-                {["M", "T", "W", "T", "F", "S", "S"].map((d, i) => (
-                  <span
-                    key={i}
-                    className={`text-[10px] font-bold py-0.5 ${
-                      i >= 5 ? "text-amber-800/80" : "text-neutral-400"
-                    }`}
+                {/* Month Stepper Header */}
+                <div className="flex items-center justify-between px-1">
+                  <button
+                    type="button"
+                    onClick={prevMonth}
+                    disabled={
+                      calendarMonth <=
+                      new Date(new Date().getFullYear(), new Date().getMonth(), 1)
+                    }
+                    className="w-7 h-7 rounded-lg hover:bg-neutral-100 disabled:opacity-25 disabled:hover:bg-transparent flex items-center justify-center transition-colors cursor-pointer disabled:cursor-not-allowed"
+                    title="Previous month"
                   >
-                    {d}
-                  </span>
-                ))}
-              </div>
+                    <ChevronLeft size={16} />
+                  </button>
+                  <div className="text-xs font-bold text-neutral-900 flex items-center gap-1.5">
+                    <Calendar size={13} className="text-neutral-500" />
+                    <span>{monthName}</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={nextMonth}
+                    className="w-7 h-7 rounded-lg hover:bg-neutral-100 flex items-center justify-center transition-colors cursor-pointer"
+                    title="Next month"
+                  >
+                    <ChevronRight size={16} />
+                  </button>
+                </div>
 
-              {/* Calendar Days Matrix */}
-              <div className="grid grid-cols-7 gap-y-1 gap-x-0 text-center">
-                {daysArray.map((dateStr, idx) => {
-                  if (!dateStr) {
-                    return <div key={`empty-${idx}`} className="h-8" />;
-                  }
-                  const dayNumber = Number(dateStr.split("-")[2]);
-                  const isPast = dateStr < todayStr;
-                  const isStart = dateStr === checkIn;
-                  const isEnd = dateStr === checkOut;
-                  const isBetween =
-                    checkIn && checkOut && dateStr > checkIn && dateStr < checkOut;
-                  const isHovered =
-                    activePicker === "checkOut" &&
-                    checkIn &&
-                    hoverDate &&
-                    hoverDate > checkIn &&
-                    dateStr > checkIn &&
-                    dateStr <= hoverDate;
-
-                  return (
-                    <div
-                      key={dateStr}
-                      className={`h-8 sm:h-9 flex items-center justify-center relative ${
-                        isBetween
-                          ? "bg-amber-100/70"
-                          : isHovered
-                          ? "bg-amber-50"
-                          : ""
-                      } ${
-                        isStart && (checkOut || isHovered)
-                          ? "bg-gradient-to-r from-transparent to-amber-100/70 rounded-l-full"
-                          : ""
-                      } ${
-                        isEnd
-                          ? "bg-gradient-to-l from-transparent to-amber-100/70 rounded-r-full"
-                          : ""
+                {/* Weekday Labels (Monday to Sunday) */}
+                <div className="grid grid-cols-7 gap-1 text-center">
+                  {["M", "T", "W", "T", "F", "S", "S"].map((d, i) => (
+                    <span
+                      key={i}
+                      className={`text-[10px] font-bold py-0.5 ${
+                        i >= 5 ? "text-amber-800/80" : "text-neutral-400"
                       }`}
                     >
-                      <button
-                        type="button"
-                        disabled={isPast}
-                        onClick={() => handleDateClick(dateStr)}
-                        onMouseEnter={() => setHoverDate(dateStr)}
-                        onMouseLeave={() => setHoverDate(null)}
-                        className={`w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center text-xs transition-all ${
-                          isStart || isEnd
-                            ? "bg-neutral-950 text-white font-bold rounded-full shadow-sm scale-105 z-10"
-                            : isBetween
-                            ? "text-amber-950 font-semibold"
+                      {d}
+                    </span>
+                  ))}
+                </div>
+
+                {/* Calendar Days Matrix */}
+                <div className="grid grid-cols-7 gap-y-1 gap-x-0 text-center">
+                  {daysArray.map((dateStr, idx) => {
+                    if (!dateStr) {
+                      return <div key={`empty-${idx}`} className="h-8" />;
+                    }
+                    const dayNumber = Number(dateStr.split("-")[2]);
+                    const isPast = dateStr < todayStr;
+                    const isStart = dateStr === checkIn;
+                    const isEnd = dateStr === checkOut;
+                    const isBetween =
+                      checkIn && checkOut && dateStr > checkIn && dateStr < checkOut;
+                    const isHovered =
+                      activePicker === "checkOut" &&
+                      checkIn &&
+                      hoverDate &&
+                      hoverDate > checkIn &&
+                      dateStr > checkIn &&
+                      dateStr <= hoverDate;
+
+                    return (
+                      <div
+                        key={dateStr}
+                        className={`h-8 sm:h-9 flex items-center justify-center relative ${
+                          isBetween
+                            ? "bg-amber-100/70"
                             : isHovered
-                            ? "text-amber-900 font-semibold"
-                            : isPast
-                            ? "text-neutral-300 line-through cursor-not-allowed"
-                            : "text-neutral-800 hover:bg-neutral-100 rounded-full cursor-pointer font-medium"
+                            ? "bg-amber-50"
+                            : ""
+                        } ${
+                          isStart && (checkOut || isHovered)
+                            ? "bg-gradient-to-r from-transparent to-amber-100/70 rounded-l-full"
+                            : ""
+                        } ${
+                          isEnd
+                            ? "bg-gradient-to-l from-transparent to-amber-100/70 rounded-r-full"
+                            : ""
                         }`}
                       >
-                        {dayNumber}
-                      </button>
-                    </div>
-                  );
-                })}
-              </div>
-
-              {/* Native inputs fallback toggle */}
-              <div className="pt-1.5 border-t border-neutral-100 flex items-center justify-between text-[10px] text-neutral-500">
-                <button
-                  type="button"
-                  onClick={() => setShowNativeInputs((s) => !s)}
-                  className="text-neutral-500 hover:text-neutral-900 underline underline-offset-2 cursor-pointer"
-                >
-                  {showNativeInputs
-                    ? "Hide date input fields"
-                    : "Type or choose with date inputs"}
-                </button>
-                <span className="text-[10px] text-neutral-400">
-                  All dates in IST (UTC+5:30)
-                </span>
-              </div>
-
-              {/* Collapsible Native Inputs for typing/browser date picking */}
-              {showNativeInputs && (
-                <div className="grid grid-cols-2 gap-2 pt-2 border-t border-neutral-100 animate-fade-in">
-                  <div>
-                    <label className="block text-[9px] font-bold uppercase tracking-wider text-neutral-500 mb-1">
-                      Check-in input
-                    </label>
-                    <input
-                      type="date"
-                      value={checkIn}
-                      min={todayStr}
-                      onChange={(e) => {
-                        setCheckIn(e.target.value);
-                        if (checkOut && e.target.value >= checkOut) {
-                          const [y, m, d] = e.target.value.split("-").map(Number);
-                          const nextD = new Date(y, m - 1, d + 1);
-                          const nextStr = `${nextD.getFullYear()}-${String(
-                            nextD.getMonth() + 1
-                          ).padStart(2, "0")}-${String(nextD.getDate()).padStart(
-                            2,
-                            "0"
-                          )}`;
-                          setCheckOut(nextStr);
-                        }
-                      }}
-                      className="w-full text-xs p-2 rounded-lg border border-neutral-200 focus:border-black focus:outline-none bg-neutral-50 font-medium"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[9px] font-bold uppercase tracking-wider text-neutral-500 mb-1">
-                      Checkout input
-                    </label>
-                    <input
-                      type="date"
-                      value={checkOut}
-                      min={checkIn || todayStr}
-                      onChange={(e) => setCheckOut(e.target.value)}
-                      className="w-full text-xs p-2 rounded-lg border border-neutral-200 focus:border-black focus:outline-none bg-neutral-50 font-medium"
-                    />
-                  </div>
+                        <button
+                          type="button"
+                          disabled={isPast}
+                          onClick={() => handleDateClick(dateStr)}
+                          onMouseEnter={() => setHoverDate(dateStr)}
+                          onMouseLeave={() => setHoverDate(null)}
+                          className={`w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center text-xs transition-all ${
+                            isStart || isEnd
+                              ? "bg-neutral-950 text-white font-bold rounded-full shadow-sm scale-105 z-10"
+                              : isBetween
+                              ? "text-amber-950 font-semibold"
+                              : isHovered
+                              ? "text-amber-900 font-semibold"
+                              : isPast
+                              ? "text-neutral-300 line-through cursor-not-allowed"
+                              : "text-neutral-800 hover:bg-neutral-100 rounded-full cursor-pointer font-medium"
+                          }`}
+                        >
+                          {dayNumber}
+                        </button>
+                      </div>
+                    );
+                  })}
                 </div>
-              )}
-            </div>
+
+                {/* Footer with Clear Dates & Close */}
+                <div className="pt-2 border-t border-neutral-100 flex items-center justify-between text-[11px] text-neutral-500">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCheckIn("");
+                      setCheckOut("");
+                      setActivePicker("checkIn");
+                      setAvailabilityData(null);
+                    }}
+                    className="text-neutral-500 hover:text-red-600 font-semibold flex items-center gap-1 cursor-pointer transition-colors"
+                  >
+                    <RotateCcw size={10} />
+                    <span>Clear Dates</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIsCalendarOpen(false)}
+                    className="font-bold text-neutral-900 hover:underline cursor-pointer"
+                  >
+                    Done selecting ✓
+                  </button>
+                </div>
+              </div>
+            )}
 
             {/* Live Availability Status */}
             {isChecking ? (
