@@ -36,11 +36,12 @@ const NAV_SECTIONS: NavSection[] = [
   { id: "gallery", label: "Gallery", number: "02" },
   { id: "accommodations", label: "Accommodations", number: "03" },
   { id: "estate-story", label: "The Estate", number: "04" },
-  { id: "reviews", label: "Reviews", number: "05" },
-  { id: "location", label: "Location", number: "06" },
-  { id: "host", label: "Host", number: "07" },
-  { id: "house-rules", label: "Guidelines", number: "08" },
-  { id: "contact", label: "Contact", number: "09" },
+  { id: "instagram", label: "Instagram", number: "05" },
+  { id: "reviews", label: "Reviews", number: "06" },
+  { id: "location", label: "Location", number: "07" },
+  { id: "host", label: "Host", number: "08" },
+  { id: "house-rules", label: "Guidelines", number: "09" },
+  { id: "contact", label: "Contact", number: "10" },
 ];
 
 export function Header({ session }: HeaderProps) {

@@ -2,6 +2,13 @@
 
 import React from "react";
 import { BookingWidget, ListingOptionBrief } from "./booking-widget";
+import {
+  Bed,
+  UtensilsCrossed,
+  Car,
+  PartyPopper,
+  Sparkles,
+} from "lucide-react";
 
 interface AmenityData {
   id: string;
@@ -21,99 +28,88 @@ export function EstateStory({ amenities, listingOptions }: EstateStoryProps) {
     listingOptions[0]?.slug ||
     "royal-suite";
 
+  const keyHighlights = [
+    {
+      icon: Bed,
+      title: "The Villa",
+      detail:
+        "Three king bedrooms, private attached bathrooms (24/7 hot water), AC & spacious family living room.",
+    },
+    {
+      icon: UtensilsCrossed,
+      title: "Kitchen & Dining",
+      detail:
+        "Full kitchen with fridge, RO water, gas stove, microwave & an on-site local food ordering menu.",
+    },
+    {
+      icon: Car,
+      title: "Veranda & Parking",
+      detail:
+        "Street-facing tree-shaded veranda for morning chai + dedicated gated parking for 3–4 cars.",
+    },
+    {
+      icon: PartyPopper,
+      title: "Events & Gatherings",
+      detail:
+        "Priced for 6 overnight guests; welcomes get-togethers, offsites & celebrations for up to 15.",
+    },
+  ];
+
   return (
     <section
-      className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 py-16 border-t border-neutral-200"
+      className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 py-16 border-t border-neutral-100"
       data-purpose="property-story"
       id="estate-story"
     >
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
-        {/* Left Column: Estate Story & Amenities */}
-        <div className="lg:col-span-7 space-y-6">
-          <div>
-            <span className="text-[11px] font-bold tracking-[0.2em] text-neutral-500 uppercase">
-              Your Home Away From Home
-            </span>
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold uppercase tracking-tight text-neutral-900 mt-1 font-sans">
-              YOUR OWN PRIVATE 3BHK VILLA IN CENTRAL JAIPUR
-            </h2>
-          </div>
-
-          <div className="text-neutral-700 text-sm sm:text-base leading-relaxed space-y-4">
-            <p className="text-base sm:text-lg font-medium text-neutral-900">
-              <strong>Dev Stays (@devstays.jaipur)</strong> is your own private
-              villa in the heart of Raja Park, Jaipur — no shared spaces, no
-              other guests. Just your group, your home, your rules.
-            </p>
-
-            <p>
-              Every corner has been handcrafted with Rajasthani textiles,
-              crochet details, antique touches, indoor plants, and curated decor
-              that guests describe as <em>&ldquo;beautiful, warm, and nostalgic.&rdquo;</em>{" "}
-              I&apos;ve personally set it up like my own home ❤️
-            </p>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 py-2">
-              <div className="p-4 rounded-2xl bg-white border border-neutral-200">
-                <h4 className="font-bold text-neutral-900 text-xs uppercase tracking-wider mb-1 flex items-center gap-1.5">
-                  <span className="material-symbols-outlined text-[16px] text-amber-700">bed</span>
-                  <span>The Villa</span>
-                </h4>
-                <p className="text-xs text-neutral-600 leading-relaxed">
-                  Three king bedrooms, each with a private attached bathroom
-                  (hot water), air conditioning, and fast Wi-Fi throughout. A large
-                  living room with 3 sofas for family dinners and game nights.
-                </p>
-              </div>
-
-              <div className="p-4 rounded-2xl bg-white border border-neutral-200">
-                <h4 className="font-bold text-neutral-900 text-xs uppercase tracking-wider mb-1 flex items-center gap-1.5">
-                  <span className="material-symbols-outlined text-[16px] text-amber-700">soup_kitchen</span>
-                  <span>Kitchen &amp; Dining</span>
-                </h4>
-                <p className="text-xs text-neutral-600 leading-relaxed">
-                  Fully equipped with fridge, RO water purifier, gas stove,
-                  microwave, and cooking essentials. An on-site food ordering menu is
-                  also available if you prefer not to cook.
-                </p>
-              </div>
-
-              <div className="p-4 rounded-2xl bg-white border border-neutral-200">
-                <h4 className="font-bold text-neutral-900 text-xs uppercase tracking-wider mb-1 flex items-center gap-1.5">
-                  <span className="material-symbols-outlined text-[16px] text-amber-700">deck</span>
-                  <span>Veranda &amp; Parking</span>
-                </h4>
-                <p className="text-xs text-neutral-600 leading-relaxed">
-                  Private street-facing veranda shaded by a beautiful old tree
-                  with seating for morning chai. Dedicated gated parking for 3-4
-                  cars inside the property.
-                </p>
-              </div>
-
-              <div className="p-4 rounded-2xl bg-white border border-neutral-200">
-                <h4 className="font-bold text-neutral-900 text-xs uppercase tracking-wider mb-1 flex items-center gap-1.5">
-                  <span className="material-symbols-outlined text-[16px] text-amber-700">celebration</span>
-                  <span>Events &amp; Groups</span>
-                </h4>
-                <p className="text-xs text-neutral-600 leading-relaxed">
-                  Birthday parties, anniversaries, work offsites, and
-                  get-togethers are all welcome. Priced for 6 overnight guests;
-                  can host up to 15 with arranged extra mattresses.
-                </p>
-              </div>
+        {/* Left Column: Estate Story & Refined Features */}
+        <div className="lg:col-span-7 space-y-8">
+          {/* Header */}
+          <div className="space-y-2.5">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-neutral-100 text-[11px] font-bold tracking-[0.2em] text-neutral-500 uppercase">
+              <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+              <span>Private Estate · Raja Park, Jaipur</span>
             </div>
-
-            <p className="text-xs sm:text-sm text-neutral-600 border-l-2 border-neutral-900 pl-3.5 italic">
-              &ldquo;Walkable to top Raja Park cafes (2-min walk) and 10–25 minutes
-              to major Jaipur attractions. Pet friendly — we love hosting fur
-              babies! Board games and badminton available.&rdquo;
+            <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-neutral-900 leading-tight">
+              Your Own Private 3BHK Sanctuary
+            </h2>
+            <p className="text-sm sm:text-base text-neutral-600 leading-relaxed font-normal">
+              An entire private villa in the heart of Raja Park reserved exclusively
+              for your group — no shared spaces, no other guests. Handcrafted with
+              warm Rajasthani textiles, crochet accents, indoor plants, and antique
+              character.
             </p>
           </div>
 
-          {/* Amenities Grid */}
+          {/* 4 Core Villa Highlights in a Clean Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {keyHighlights.map((item, idx) => {
+              const IconComponent = item.icon;
+              return (
+                <div
+                  key={idx}
+                  className="p-4 rounded-xl bg-neutral-50/70 border border-neutral-200/70 hover:border-neutral-300 transition-colors"
+                >
+                  <div className="flex items-center gap-2.5 mb-1.5">
+                    <div className="w-7 h-7 rounded-lg bg-white border border-neutral-200/80 flex items-center justify-center text-neutral-800 shrink-0">
+                      <IconComponent className="w-4 h-4 text-amber-700" />
+                    </div>
+                    <h3 className="font-bold text-xs uppercase tracking-wider text-neutral-900">
+                      {item.title}
+                    </h3>
+                  </div>
+                  <p className="text-xs text-neutral-600 leading-relaxed pl-9.5">
+                    {item.detail}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Estate Amenities & Services (Restored) */}
           <div className="pt-6 border-t border-neutral-200">
             <h3 className="text-sm font-bold uppercase tracking-wider text-neutral-900 mb-4">
-              Estate Amenities & Services
+              Estate Amenities &amp; Services
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs text-neutral-800">
               {amenities.map((item) => (

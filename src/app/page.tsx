@@ -7,11 +7,13 @@ import { PhotoGallery } from "@/components/photo-gallery";
 import { Accommodations } from "@/components/accommodations";
 import { EstateStory } from "@/components/estate-story";
 import { GuestReviews } from "@/components/guest-reviews";
+import { InstagramFeed } from "@/components/instagram-feed";
 import { LocationSection } from "@/components/location-section";
 import { MeetHost } from "@/components/meet-host";
 import { HouseRules } from "@/components/house-rules";
 import { InquiryForm } from "@/components/inquiry-form";
 import { Footer } from "@/components/footer";
+import { getInstagramFeed } from "@/lib/instagram/provider";
 
 export const dynamic = "force-dynamic";
 
@@ -53,6 +55,7 @@ export default async function HomePage() {
     }, 8500) ?? 8500;
 
   const session = await auth();
+  const instagramFeed = await getInstagramFeed();
 
   return (
     <div className="min-h-screen flex flex-col bg-[#FCFCFC]">
@@ -76,6 +79,7 @@ export default async function HomePage() {
             maxGuests: o.maxGuests,
           }))}
         />
+        <InstagramFeed initialData={instagramFeed} />
         <GuestReviews />
         <LocationSection />
         <MeetHost />
