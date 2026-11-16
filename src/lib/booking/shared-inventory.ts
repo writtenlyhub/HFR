@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { BookingStatus, BlockReason, BookingSource } from "@prisma/client";
+import { calculateReservationPricing } from "@/lib/pricing/pricing-engine";
 import crypto from "crypto";
 
 export interface CheckAvailabilityParams {
@@ -247,28 +248,26 @@ export async function checkAvailability(
     if (found) targetOption = found;
   }
 
-  // Calculate pricing
-  const nights = Math.max(
-    1,
-    Math.round((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24))
-  );
-  const baseRate = Number(targetOption.basePricePerNight);
-  const cleaningFee = Number(targetOption.cleaningFee);
-  const taxPct = Number(targetOption.taxPercentage);
+  // Calculate dynamic pricing with rate rules, weekend rates & extra guest policies
+  const pricingCalc = await calculateReservationPricing({
+    propertyId: property.id,
+    listingOptionId: targetOption.id,
+    checkInDate: checkIn,
+    checkOutDate: checkOut,
+    guestCount: params.guestCount,
+  });
 
-  const baseAmount = baseRate * nights;
-  const taxableTotal = baseAmount + cleaningFee;
-  const taxesAmount = Math.round((taxableTotal * taxPct) / 100);
-  const totalAmount = taxableTotal + taxesAmount;
+  const baseRate = pricingCalc.averageNightlyRate;
+  const nights = pricingCalc.nights;
 
   const pricing: PricingBreakdown = {
     nights,
-    basePricePerNight: baseRate,
-    cleaningFee,
-    taxPercentage: taxPct,
-    baseAmount,
-    taxesAmount,
-    totalAmount,
+    basePricePerNight: pricingCalc.averageNightlyRate,
+    cleaningFee: pricingCalc.cleaningFee,
+    taxPercentage: pricingCalc.taxPercentage,
+    baseAmount: pricingCalc.baseNightlyTotal + pricingCalc.extraGuestTotal,
+    taxesAmount: pricingCalc.taxesAmount,
+    totalAmount: pricingCalc.totalAmount,
     currency: "INR",
   };
 
@@ -313,6 +312,9 @@ export async function checkAvailability(
     reason = holdBlock
       ? "These dates are currently held by another customer. Please check back shortly or choose alternate dates."
       : "The estate is already reserved for overlapping dates.";
+  } else if (!pricingCalc.meetsMinStay) {
+    available = false;
+    reason = pricingCalc.minStayError;
   } else if (params.guestCount > targetOption.maxGuests) {
     available = false;
     reason = `Selected configuration accommodates up to ${targetOption.maxGuests} guests. You requested ${params.guestCount} guests.`;
@@ -409,18 +411,32 @@ export async function createBookingHold(params: CreateHoldParams): Promise<HoldR
   }
 
   const inventoryGroupId = listingOption.inventoryGroupId;
-  const nights = Math.max(
-    1,
-    Math.round((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24))
-  );
 
-  const baseRate = Number(listingOption.basePricePerNight);
-  const cleaningFee = Number(listingOption.cleaningFee);
-  const taxPct = Number(listingOption.taxPercentage);
-  const baseAmount = baseRate * nights;
-  const taxableTotal = baseAmount + cleaningFee;
-  const taxesAmount = Math.round((taxableTotal * taxPct) / 100);
-  const totalAmount = taxableTotal + taxesAmount;
+  // Calculate dynamic pricing using the unified pricing engine
+  const pricingCalc = await calculateReservationPricing({
+    propertyId: listingOption.propertyId,
+    listingOptionId: listingOption.id,
+    checkInDate: checkIn,
+    checkOutDate: checkOut,
+    guestCount: params.guestCount,
+  });
+
+  if (!pricingCalc.meetsMinStay) {
+    return {
+      success: false,
+      error:
+        pricingCalc.minStayError ||
+        `Minimum stay of ${pricingCalc.requiredMinStay} nights is required for the requested dates.`,
+    };
+  }
+
+  const nights = pricingCalc.nights;
+  const baseRate = pricingCalc.averageNightlyRate;
+  const baseAmount = pricingCalc.baseNightlyTotal + pricingCalc.extraGuestTotal;
+  const cleaningFee = pricingCalc.cleaningFee;
+  const taxPct = pricingCalc.taxPercentage;
+  const taxesAmount = pricingCalc.taxesAmount;
+  const totalAmount = pricingCalc.totalAmount;
 
   const now = new Date();
   const holdExpiresAt = new Date(now.getTime() + 15 * 60 * 1000); // 15-minute hold

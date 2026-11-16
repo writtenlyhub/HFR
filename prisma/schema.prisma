@@ -240,6 +240,9 @@ model ListingOption {
   weekendPricePerNight Decimal? @db.Decimal(10, 2)
   cleaningFee          Decimal  @default(0.00) @db.Decimal(10, 2)
   taxPercentage        Decimal  @default(12.00) @db.Decimal(5, 2)
+  minStayNights        Int      @default(1) @map("min_stay_nights")
+  extraGuestCharge     Decimal  @default(0.00) @db.Decimal(10, 2) @map("extra_guest_charge")
+  standardGuests       Int?     @map("standard_guests")
   description          String   @db.Text
   summary              String?  @db.Text
   coverImage           String?
@@ -307,6 +310,8 @@ model PricingRule {
   propertyId      String   @map("property_id")
   listingOptionId String?  @map("listing_option_id")
   name            String
+  ruleType        String   @default("SEASONAL") @map("rule_type")
+  description     String?  @db.Text
   startDate       DateTime
   endDate         DateTime
   pricePerNight   Decimal? @db.Decimal(10, 2)
