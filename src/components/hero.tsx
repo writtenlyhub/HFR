@@ -3,12 +3,24 @@ interface HeroProps {
   startingPrice?: number;
   headline?: string | null;
   description?: string;
+  primaryButtonText?: string;
+  primaryButtonLink?: string;
+  secondaryButtonText?: string;
+  secondaryButtonLink?: string;
+  videoUrl?: string;
+  posterImageUrl?: string;
 }
 
 export function Hero({
   startingPrice = 8500,
   headline = "YOUR OWN PRIVATE 3BHK VILLA IN CENTRAL JAIPUR",
   description = "A private 3BHK villa handcrafted with Rajasthani textiles, crochet details, and curated decor. Your peaceful sanctuary in Raja Park — no shared spaces, no other guests.",
+  primaryButtonText = "Explore Accommodations",
+  primaryButtonLink = "#accommodations",
+  secondaryButtonText = "Check Availability",
+  secondaryButtonLink = "#sidebar-booking-card",
+  videoUrl = "/videos/hero-video.mp4",
+  posterImageUrl = "/images/living-room/imgi_491_9b8ea86b-c2d1-4327-a5dc-0204663820d1.jpg",
 }: HeroProps) {
   const formattedPrice = "₹" + startingPrice.toLocaleString("en-IN");
 
@@ -28,10 +40,10 @@ export function Hero({
             muted
             playsInline
             preload="auto"
-            poster="/images/living-room/imgi_491_9b8ea86b-c2d1-4327-a5dc-0204663820d1.jpg"
+            poster={posterImageUrl}
           >
             <source
-              src="/videos/hero-video.mp4"
+              src={videoUrl}
               type="video/mp4"
             />
           </video>
@@ -66,18 +78,18 @@ export function Hero({
             <div className="flex flex-wrap items-center gap-2.5 sm:gap-3">
               <a
                 className="bg-white hover:bg-neutral-100 text-neutral-900 font-semibold px-5 py-2.5 sm:py-3 rounded-full text-xs uppercase tracking-wider transition-all shadow-md flex items-center gap-1.5 group"
-                href="#accommodations"
+                href={primaryButtonLink}
               >
-                <span>Explore Accommodations</span>
+                <span>{primaryButtonText}</span>
                 <span className="transition-transform group-hover:translate-y-0.5">
                   ↓
                 </span>
               </a>
               <a
                 className="bg-black/60 hover:bg-black/90 border border-white/30 text-white font-semibold px-5 py-2.5 sm:py-3 rounded-full text-xs uppercase tracking-wider transition-all flex items-center gap-1.5"
-                href="#sidebar-booking-card"
+                href={secondaryButtonLink}
               >
-                <span>Check Availability</span>
+                <span>{secondaryButtonText}</span>
                 <span>↗</span>
               </a>
             </div>

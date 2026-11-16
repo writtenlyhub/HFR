@@ -1,5 +1,14 @@
-export function HouseRules() {
-  const rules = [
+interface HouseRulesProps {
+  faqs?: Array<{
+    id: string;
+    question: string;
+    answer: string;
+    category: string | null;
+  }>;
+}
+
+export function HouseRules({ faqs }: HouseRulesProps) {
+  const defaultRules = [
     {
       icon: "🚪",
       title: "Check-in after 14:00 · Checkout before 11:00",
@@ -33,7 +42,7 @@ export function HouseRules() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        {rules.map((r) => (
+        {defaultRules.map((r) => (
           <div
             key={r.title}
             className="p-6 bg-white rounded-3xl border border-neutral-200 space-y-3 shadow-xs"
@@ -46,6 +55,37 @@ export function HouseRules() {
           </div>
         ))}
       </div>
+
+      {/* Frequently Asked Questions */}
+      {faqs && faqs.length > 0 && (
+        <div className="mt-16 pt-12 border-t border-neutral-200 space-y-8" id="faqs">
+          <div>
+            <span className="text-[11px] font-bold tracking-[0.2em] text-neutral-500 uppercase">
+              Common Questions
+            </span>
+            <h3 className="text-xl sm:text-2xl font-extrabold uppercase tracking-tight text-neutral-900 mt-1 font-sans">
+              Frequently Asked Questions
+            </h3>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {faqs.map((faq) => (
+              <div
+                key={faq.id}
+                className="p-6 bg-neutral-50/70 border border-neutral-200/80 rounded-2xl space-y-2 hover:border-neutral-300 transition"
+              >
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-amber-800 bg-amber-100/60 px-2 py-0.5 rounded">
+                    {faq.category || "General"}
+                  </span>
+                </div>
+                <h4 className="text-sm font-bold text-neutral-900">{faq.question}</h4>
+                <p className="text-xs text-neutral-600 leading-relaxed">{faq.answer}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </section>
   );
 }

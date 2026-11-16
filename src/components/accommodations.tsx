@@ -22,9 +22,20 @@ interface ListingOptionData {
 interface AccommodationsProps {
   options: ListingOptionData[];
   onSelectOption?: (slug: string) => void;
+  cmsContent?: {
+    badge?: string;
+    headline?: string;
+    subtitle?: string;
+  };
 }
 
-export function Accommodations({ options, onSelectOption }: AccommodationsProps) {
+export function Accommodations({ options, onSelectOption, cmsContent }: AccommodationsProps) {
+  const badge = cmsContent?.badge || "TAILORED CONFIGURATIONS";
+  const headline = cmsContent?.headline || "CHOOSE YOUR STAY AT DEV STAYS";
+  const subtitle =
+    cmsContent?.subtitle ||
+    "Three thoughtfully designed accommodation options for every kind of stay.";
+
   const getRouteSlug = (slug: string) => {
     return slug === "full-estate-buyout" ? "full-estate" : slug;
   };
@@ -49,13 +60,13 @@ export function Accommodations({ options, onSelectOption }: AccommodationsProps)
       {/* Title lockup */}
       <div className="text-center max-w-3xl mx-auto mb-12">
         <span className="inline-block bg-[#F3F4F6] text-neutral-600 text-[11px] font-bold tracking-[0.2em] uppercase px-4 py-1.5 rounded-full mb-3">
-          TAILORED CONFIGURATIONS
+          {badge}
         </span>
         <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold uppercase tracking-tight text-neutral-900 mb-4 font-sans">
-          CHOOSE YOUR STAY AT DEV STAYS
+          {headline}
         </h2>
         <p className="text-neutral-600 text-sm sm:text-base leading-relaxed">
-          Three thoughtfully designed accommodation options for every kind of stay.
+          {subtitle}
         </p>
 
         {/* Shared Inventory Exclusive Privacy Note */}

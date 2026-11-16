@@ -20,15 +20,26 @@ interface AmenityData {
 interface EstateStoryProps {
   amenities: AmenityData[];
   listingOptions: ListingOptionBrief[];
+  cmsContent?: {
+    badge?: string;
+    headline?: string;
+    description?: string;
+    brandStory?: string;
+    highlights?: Array<{
+      title: string;
+      detail: string;
+      iconName?: string;
+    }>;
+  };
 }
 
-export function EstateStory({ amenities, listingOptions }: EstateStoryProps) {
+export function EstateStory({ amenities, listingOptions, cmsContent }: EstateStoryProps) {
   const initialSlug =
     listingOptions.find((o) => o.slug === "full-estate-buyout")?.slug ||
     listingOptions[0]?.slug ||
     "royal-suite";
 
-  const keyHighlights = [
+  const defaultHighlights = [
     {
       icon: Bed,
       title: "The Villa",
@@ -55,6 +66,20 @@ export function EstateStory({ amenities, listingOptions }: EstateStoryProps) {
     },
   ];
 
+  const highlights = cmsContent?.highlights && cmsContent.highlights.length > 0
+    ? cmsContent.highlights.map((h, i) => ({
+        icon: defaultHighlights[i % defaultHighlights.length]?.icon || Bed,
+        title: h.title,
+        detail: h.detail,
+      }))
+    : defaultHighlights;
+
+  const badge = cmsContent?.badge || "Private Estate · Raja Park, Jaipur";
+  const headline = cmsContent?.headline || "Your Own Private 3BHK Sanctuary";
+  const description =
+    cmsContent?.description ||
+    "An entire private villa in the heart of Raja Park reserved exclusively for your group — no shared spaces, no other guests. Handcrafted with warm Rajasthani textiles, crochet accents, indoor plants, and antique character.";
+
   return (
     <section
       className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 py-16 border-t border-neutral-100"
@@ -68,22 +93,19 @@ export function EstateStory({ amenities, listingOptions }: EstateStoryProps) {
           <div className="space-y-2.5">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-neutral-100 text-[11px] font-bold tracking-[0.2em] text-neutral-500 uppercase">
               <Sparkles className="w-3.5 h-3.5 text-amber-600" />
-              <span>Private Estate · Raja Park, Jaipur</span>
+              <span>{badge}</span>
             </div>
             <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-neutral-900 leading-tight">
-              Your Own Private 3BHK Sanctuary
+              {headline}
             </h2>
             <p className="text-sm sm:text-base text-neutral-600 leading-relaxed font-normal">
-              An entire private villa in the heart of Raja Park reserved exclusively
-              for your group — no shared spaces, no other guests. Handcrafted with
-              warm Rajasthani textiles, crochet accents, indoor plants, and antique
-              character.
+              {description}
             </p>
           </div>
 
           {/* 4 Core Villa Highlights in a Clean Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {keyHighlights.map((item, idx) => {
+            {highlights.map((item, idx) => {
               const IconComponent = item.icon;
               return (
                 <div

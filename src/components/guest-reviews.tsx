@@ -1,4 +1,15 @@
-export function GuestReviews() {
+interface GuestReviewsProps {
+  testimonials?: Array<{
+    id: string;
+    guestName: string;
+    location: string | null;
+    reviewText: string;
+    rating: number;
+    stayType: string | null;
+  }>;
+}
+
+export function GuestReviews({ testimonials }: GuestReviewsProps) {
   const categories = [
     { name: "Cleanliness", score: "4.9 ★", icon: "cleaning_services" },
     { name: "Location", score: "5.0 ★", icon: "pin_drop" },
@@ -19,7 +30,7 @@ export function GuestReviews() {
     "Decor (2)",
   ];
 
-  const reviews = [
+  const defaultReviews = [
     {
       id: "1",
       name: "Sumit",
@@ -74,6 +85,18 @@ export function GuestReviews() {
       comment: '"Great place! Would love to visit again"',
     },
   ];
+
+  const reviews =
+    testimonials && testimonials.length > 0
+      ? testimonials.map((t) => ({
+          id: t.id,
+          name: t.guestName,
+          initials: t.guestName.charAt(0).toUpperCase() || "G",
+          tag: t.location || "Verified Guest Stay",
+          date: t.stayType || "Verified Guest Stay",
+          comment: t.reviewText.startsWith('"') ? t.reviewText : `"${t.reviewText}"`,
+        }))
+      : defaultReviews;
 
   return (
     <section

@@ -20,8 +20,19 @@ const InteractiveLocationMap = dynamic(
   }
 );
 
-export function LocationSection() {
-  const landmarks: Landmark[] = [
+interface LocationSectionProps {
+  experiences?: Array<{
+    id: string;
+    title: string;
+    subtitle: string | null;
+    description: string;
+    iconName: string | null;
+    category: string | null;
+  }>;
+}
+
+export function LocationSection({ experiences }: LocationSectionProps) {
+  const defaultLandmarks: Landmark[] = [
     {
       id: "cafes",
       name: "Cafes & Street Food Lanes",
@@ -100,6 +111,20 @@ export function LocationSection() {
         "Direct domestic & international terminal in Sanganer (~9 km south of Raja Park with fast expressway connectivity).",
     },
   ];
+
+  const landmarks: Landmark[] =
+    experiences && experiences.length > 0
+      ? experiences.map((exp, idx) => ({
+          id: exp.id,
+          name: exp.title,
+          time: exp.subtitle?.split("·")[0]?.trim() || "Local Attraction",
+          distance: exp.subtitle?.split("·")[1]?.trim() || "Nearby",
+          mode: (exp.subtitle?.toLowerCase().includes("walk") ? "walk" : "drive") as "walk" | "drive",
+          icon: exp.iconName || "pin_drop",
+          coords: defaultLandmarks[idx % defaultLandmarks.length]?.coords || [26.8936, 75.8288],
+          description: exp.description,
+        }))
+      : defaultLandmarks;
 
   const [selectedLandmark, setSelectedLandmark] = useState<Landmark | null>(null);
 

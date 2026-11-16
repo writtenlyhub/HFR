@@ -1,4 +1,24 @@
-export function Footer() {
+interface FooterProps {
+  contactInfo?: {
+    businessPhone?: string;
+    contactEmail?: string;
+    physicalAddress?: string;
+  };
+  socialMedia?: {
+    instagramUrl?: string;
+    facebookUrl?: string;
+    twitterUrl?: string;
+    youtubeUrl?: string;
+  };
+}
+
+export function Footer({ contactInfo, socialMedia }: FooterProps = {}) {
+  const phone = contactInfo?.businessPhone || "+91 141 289 4400";
+  const email = contactInfo?.contactEmail || "concierge@devstaysjaipur.com";
+  const address = contactInfo?.physicalAddress || "Raja Park, Central Jaipur, Rajasthan 302004, India";
+  const instagramUrl = socialMedia?.instagramUrl || "https://instagram.com/devstays.jaipur";
+  const instagramHandle = instagramUrl.match(/instagram\.com\/([a-zA-Z0-9._]+)/)?.[1] || "devstays.jaipur";
+
   return (
     <footer
       className="bg-black text-white pt-16 pb-12 px-6 lg:px-12 border-t border-neutral-900"
@@ -27,26 +47,24 @@ export function Footer() {
 
           <div className="text-xs text-neutral-400 space-y-1.5 pt-2 font-normal">
             <p className="hover:text-white transition-colors">
-              <a href="tel:+911412894400">+91 141 289 4400</a>
+              <a href={`tel:${phone.replace(/\s+/g, "")}`}>{phone}</a>
             </p>
             <p className="hover:text-white transition-colors">
-              <a href="mailto:concierge@devstaysjaipur.com">
-                concierge@devstaysjaipur.com
-              </a>
+              <a href={`mailto:${email}`}>{email}</a>
             </p>
             <p className="hover:text-white transition-colors">
               <a
-                href="https://instagram.com/devstays.jaipur"
+                href={instagramUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-amber-400 hover:text-amber-300 transition-colors flex items-center gap-1"
               >
-                <span>Instagram: @devstays.jaipur</span>
+                <span>Instagram: @{instagramHandle}</span>
                 <span>↗</span>
               </a>
             </p>
             <p className="text-neutral-500">
-              Raja Park, Central Jaipur, Rajasthan 302004, India
+              {address}
             </p>
           </div>
         </div>

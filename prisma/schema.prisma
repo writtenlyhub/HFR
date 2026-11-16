@@ -691,4 +691,75 @@ model CalendarSyncLog {
   @@map("calendar_sync_logs")
 }
 
+// -------------------------------------------------------------
+// Website Content Management Models (CMS)
+// -------------------------------------------------------------
+
+model SiteContent {
+  id              String    @id @default(cuid())
+  sectionKey      String    @unique @map("section_key")
+  title           String?
+  subtitle        String?
+  content         Json
+  draftContent    Json?     @map("draft_content")
+  isPublished     Boolean   @default(true) @map("is_published")
+  hasDraft        Boolean   @default(false) @map("has_draft")
+  lastPublishedAt DateTime? @map("last_published_at")
+  lastEditedBy    String?   @map("last_edited_by")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  @@index([sectionKey])
+  @@map("site_contents")
+}
+
+model Testimonial {
+  id            String   @id @default(cuid())
+  guestName     String   @map("guest_name")
+  location      String?
+  stayType      String?  @map("stay_type")
+  reviewText    String   @map("review_text") @db.Text
+  rating        Int      @default(5)
+  guestImageUrl String?  @map("guest_image_url")
+  sortOrder     Int      @default(0) @map("sort_order")
+  isPublished   Boolean  @default(true) @map("is_published")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  @@index([isPublished, sortOrder])
+  @@map("testimonials")
+}
+
+model FaqItem {
+  id          String   @id @default(cuid())
+  question    String   @db.Text
+  answer      String   @db.Text
+  category    String?  @default("General")
+  sortOrder   Int      @default(0) @map("sort_order")
+  isPublished Boolean  @default(true) @map("is_published")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@index([isPublished, sortOrder])
+  @@map("faq_items")
+}
+
+model ExperienceItem {
+  id          String   @id @default(cuid())
+  title       String
+  subtitle    String?
+  description String   @db.Text
+  imageUrl    String?  @map("image_url")
+  iconName    String?  @map("icon_name")
+  category    String?  @default("Neighborhood")
+  sortOrder   Int      @default(0) @map("sort_order")
+  isPublished Boolean  @default(true) @map("is_published")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@index([isPublished, sortOrder])
+  @@map("experience_items")
+}
+
+
 

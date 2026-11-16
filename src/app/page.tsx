@@ -14,6 +14,17 @@ import { HouseRules } from "@/components/house-rules";
 import { InquiryForm } from "@/components/inquiry-form";
 import { Footer } from "@/components/footer";
 import { getInstagramFeed } from "@/lib/instagram/provider";
+import {
+  getSectionContent,
+  HomepageHeroContent,
+  FeaturedAccommodationsContent,
+  HomepageAboutContent,
+  ContactInfoContent,
+  SocialMediaContent,
+  getTestimonials,
+  getFaqs,
+  getExperiences,
+} from "@/lib/content/content-service";
 
 export const dynamic = "force-dynamic";
 
@@ -36,9 +47,30 @@ export default async function HomePage() {
     },
   });
 
+  // 2. Fetch live published CMS content sections
+  const [
+    heroCms,
+    featuredCms,
+    aboutCms,
+    contactCms,
+    socialCms,
+    testimonials,
+    faqs,
+    experiences,
+  ] = await Promise.all([
+    getSectionContent<HomepageHeroContent>("homepage_hero"),
+    getSectionContent<FeaturedAccommodationsContent>("featured_accommodations"),
+    getSectionContent<HomepageAboutContent>("homepage_about"),
+    getSectionContent<ContactInfoContent>("contact_info"),
+    getSectionContent<SocialMediaContent>("social_media"),
+    getTestimonials(),
+    getFaqs(),
+    getExperiences(),
+  ]);
+
   // Serialize listingOptions to plain objects (converting Prisma Decimals to JavaScript numbers)
   // so they can be safely passed across the Server Component -> Client Component boundary.
-  const serializedListingOptions =
+  const allListingOptions =
     property?.listingOptions.map((opt) => ({
       ...opt,
       basePricePerNight: Number(opt.basePricePerNight),
@@ -47,12 +79,18 @@ export default async function HomePage() {
       taxPercentage: Number(opt.taxPercentage),
     })) ?? [];
 
-  // Calculate dynamic starting price from active configurations
+  // Filter or limit by CMS configuration if defined
+  const maxListings = featuredCms.content.maxListings || 3;
+  const serializedListingOptions = allListingOptions.slice(0, maxListings);
+
+  // Calculate dynamic starting price from active configurations or CMS override
   const startingPrice =
+    heroCms.content.startingPrice ||
     serializedListingOptions.reduce((min, opt) => {
       const price = opt.basePricePerNight;
       return price < min ? price : min;
-    }, 8500) ?? 8500;
+    }, 8500) ||
+    8500;
 
   const session = await auth();
   const instagramFeed = await getInstagramFeed();
@@ -63,30 +101,53 @@ export default async function HomePage() {
       <main className="overflow-hidden flex-1">
         <Hero
           startingPrice={startingPrice}
-          headline="YOUR OWN PRIVATE 3BHK VILLA IN CENTRAL JAIPUR"
-          description="A private 3BHK villa handcrafted with Rajasthani textiles, crochet details, and curated decor. Your peaceful sanctuary in Raja Park — no shared spaces, no other guests."
+          headline={heroCms.content.headline}
+          description={heroCms.content.description}
+          primaryButtonText={heroCms.content.primaryButtonText}
+          primaryButtonLink={heroCms.content.primaryButtonLink}
+          secondaryButtonText={heroCms.content.secondaryButtonText}
+          secondaryButtonLink={heroCms.content.secondaryButtonLink}
+          videoUrl={heroCms.content.videoUrl}
+          posterImageUrl={heroCms.content.posterImageUrl}
         />
         <TrustLayer />
         <PhotoGallery images={property?.images ?? []} />
-        <Accommodations options={serializedListingOptions} />
+        <Accommodations
+          options={serializedListingOptions}
+          cmsContent={{
+            badge: featuredCms.content.badge,
+            headline: featuredCms.content.headline,
+            subtitle: featuredCms.content.subtitle,
+          }}
+        />
         <EstateStory
           amenities={property?.amenities ?? []}
-          listingOptions={serializedListingOptions.map((o) => ({
+          listingOptions={allListingOptions.map((o) => ({
             id: o.id,
             slug: o.slug,
             title: o.title,
             basePricePerNight: o.basePricePerNight,
             maxGuests: o.maxGuests,
           }))}
+          cmsContent={{
+            badge: aboutCms.content.badge,
+            headline: aboutCms.content.headline,
+            description: aboutCms.content.description,
+            brandStory: aboutCms.content.brandStory,
+            highlights: aboutCms.content.highlights,
+          }}
         />
         <InstagramFeed initialData={instagramFeed} />
-        <GuestReviews />
-        <LocationSection />
+        <GuestReviews testimonials={testimonials} />
+        <LocationSection experiences={experiences} />
         <MeetHost />
-        <HouseRules />
+        <HouseRules faqs={faqs} />
         <InquiryForm />
       </main>
-      <Footer />
+      <Footer
+        contactInfo={contactCms.content}
+        socialMedia={socialCms.content}
+      />
     </div>
   );
 }
