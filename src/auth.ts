@@ -74,7 +74,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 });
 
 /**
- * Validates whether the incoming request is authenticated as an administrator.
+ * Validates whether the incoming request is authenticated as staff (ADMIN or PROPERTY_MANAGER).
  * Returns { authorized: true, user } or { authorized: false, status: 401 | 403, error: string }.
  */
 export async function requireAdminSession() {
@@ -88,11 +88,14 @@ export async function requireAdminSession() {
       };
     }
 
-    if (session.user.role !== Role.ADMIN) {
+    if (
+      session.user.role !== Role.ADMIN &&
+      session.user.role !== Role.PROPERTY_MANAGER
+    ) {
       return {
         authorized: false,
         status: 403 as const,
-        error: "Forbidden: Administrator role required",
+        error: "Forbidden: Staff administrator or property manager access required",
       };
     }
 
@@ -108,4 +111,20 @@ export async function requireAdminSession() {
       error: "Unauthorized: Administrator sign-in required",
     };
   }
+}
+
+/**
+ * Validates whether the incoming request is authenticated specifically as SUPER ADMIN / ADMIN.
+ */
+export async function requireSuperAdminSession() {
+  const check = await requireAdminSession();
+  if (!check.authorized || !check.user) return check;
+  if (check.user.role !== Role.ADMIN) {
+    return {
+      authorized: false,
+      status: 403 as const,
+      error: "Forbidden: Super Administrator privileges required",
+    };
+  }
+  return check;
 }
