@@ -61,7 +61,7 @@ const NAV_ITEMS = [
   },
   {
     name: "Media Gallery",
-    href: "/admin/gallery",
+    href: "/admin/media",
     icon: Images,
   },
   {

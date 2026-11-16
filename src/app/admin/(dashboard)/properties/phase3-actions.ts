@@ -14,11 +14,12 @@ function safeRevalidatePath(path: string) {
   }
 }
 
-export interface ActionResult {
+export interface ActionResult<T = unknown> {
   success: boolean;
   message?: string;
   error?: string;
   errors?: string[];
+  data?: T;
 }
 
 export interface PublishingValidationResult {
@@ -497,6 +498,54 @@ export async function uploadPropertyImages(
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);
     return { success: false, error: `Upload failed: ${msg}` };
+  }
+}
+
+/**
+ * Attaches an existing media asset from the central gallery to a property.
+ */
+export async function attachMediaAssetToProperty(
+  propertyId: string,
+  assetUrl: string,
+  caption?: string,
+  altText?: string
+): Promise<ActionResult> {
+  const authCheck = await requireAdminSession();
+  if (!authCheck.authorized) {
+    return { success: false, error: authCheck.error };
+  }
+
+  try {
+    const existingCount = await prisma.propertyImage.count({ where: { propertyId } });
+    const isCover = existingCount === 0;
+
+    const img = await prisma.propertyImage.create({
+      data: {
+        propertyId,
+        url: assetUrl,
+        caption: caption || "Property Gallery Image",
+        altText: altText || "DevStay luxury accommodation photograph",
+        isCover,
+        sortOrder: existingCount + 1,
+      },
+    });
+
+    await prisma.auditLog.create({
+      data: {
+        action: "PROPERTY_ATTACH_MEDIA",
+        entityType: "Property",
+        entityId: propertyId,
+        userId: authCheck.user?.id,
+        userEmail: authCheck.user?.email,
+        metadata: { url: assetUrl, isCover },
+      },
+    });
+
+    safeRevalidatePath(`/admin/properties/${propertyId}`);
+    return { success: true, message: "Media asset attached to property gallery.", data: img };
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    return { success: false, error: `Failed to attach media: ${msg}` };
   }
 }
 

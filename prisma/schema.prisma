@@ -761,5 +761,34 @@ model ExperienceItem {
   @@map("experience_items")
 }
 
+enum MediaType {
+  IMAGE
+  VIDEO
+}
+
+model MediaAsset {
+  id               String    @id @default(cuid())
+  url              String    @unique
+  fileName         String    @map("file_name")
+  originalFilename String    @map("original_filename")
+  title            String?
+  altText          String?   @map("alt_text")
+  caption          String?
+  description      String?   @db.Text
+  mediaType        MediaType @default(IMAGE) @map("media_type")
+  mimeType         String    @map("mime_type")
+  fileSize         Int       @map("file_size")
+  width            Int?
+  height           Int?
+  uploadedBy       String?   @map("uploaded_by")
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
+
+  @@index([mediaType])
+  @@index([createdAt])
+  @@map("media_assets")
+}
+
+
 
 

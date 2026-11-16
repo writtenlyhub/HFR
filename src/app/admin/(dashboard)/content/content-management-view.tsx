@@ -29,7 +29,9 @@ import {
   Lock,
   Building,
   Info,
+  FolderOpen,
 } from "lucide-react";
+import { MediaPickerModal } from "@/components/admin/media-picker-modal";
 import {
   saveSectionDraftAction,
   publishSectionAction,
@@ -229,6 +231,14 @@ export function ContentManagementView({
   const [publishConfirm, setPublishConfirm] = useState<{
     sectionKey: string;
     sectionTitle: string;
+  } | null>(null);
+
+  // Central Media Picker Modal state
+  const [mediaPickerConfig, setMediaPickerConfig] = useState<{
+    isOpen: boolean;
+    filterType?: "ALL" | "IMAGE" | "VIDEO";
+    onSelect: (url: string) => void;
+    title?: string;
   } | null>(null);
 
   // Image Upload helper
@@ -648,12 +658,29 @@ export function ContentManagementView({
                   <label className="block text-xs font-bold uppercase tracking-wider text-neutral-700 mb-1.5">
                     Background Video Link
                   </label>
-                  <input
-                    type="text"
-                    value={heroForm.videoUrl}
-                    onChange={(e) => setHeroForm({ ...heroForm, videoUrl: e.target.value })}
-                    className="w-full text-xs p-3 border border-neutral-300 rounded-xl focus:ring-2 focus:ring-neutral-900 outline-none"
-                  />
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={heroForm.videoUrl}
+                      onChange={(e) => setHeroForm({ ...heroForm, videoUrl: e.target.value })}
+                      className="flex-1 text-xs p-3 border border-neutral-300 rounded-xl focus:ring-2 focus:ring-neutral-900 outline-none"
+                    />
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setMediaPickerConfig({
+                          isOpen: true,
+                          filterType: "VIDEO",
+                          title: "Select Background Video from Library",
+                          onSelect: (url) => setHeroForm((prev) => ({ ...prev, videoUrl: url })),
+                        })
+                      }
+                      className="px-3.5 py-2.5 bg-neutral-100 hover:bg-neutral-200 text-neutral-800 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition shrink-0"
+                    >
+                      <FolderOpen className="w-3.5 h-3.5 text-amber-700" />
+                      <span>Library</span>
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -726,6 +753,21 @@ export function ContentManagementView({
                     onChange={(e) => setHeroForm({ ...heroForm, posterImageUrl: e.target.value })}
                     className="flex-1 text-xs p-3 border border-neutral-300 rounded-xl outline-none"
                   />
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setMediaPickerConfig({
+                        isOpen: true,
+                        filterType: "IMAGE",
+                        title: "Select Poster Image from Library",
+                        onSelect: (url) => setHeroForm((prev) => ({ ...prev, posterImageUrl: url })),
+                      })
+                    }
+                    className="px-3.5 py-2.5 bg-neutral-100 hover:bg-neutral-200 text-neutral-800 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition shrink-0"
+                  >
+                    <FolderOpen className="w-3.5 h-3.5 text-amber-700" />
+                    <span>Library</span>
+                  </button>
                   <label className="px-4 py-2.5 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 rounded-xl text-xs font-semibold cursor-pointer flex items-center gap-1.5">
                     <Upload className="w-3.5 h-3.5" />
                     <span>Upload</span>
@@ -1874,6 +1916,21 @@ export function ContentManagementView({
                   onChange={(e) => setSeoForm({ ...seoForm, defaultOgImageUrl: e.target.value })}
                   className="flex-1 text-xs p-3 border border-neutral-300 rounded-xl outline-none"
                 />
+                <button
+                  type="button"
+                  onClick={() =>
+                    setMediaPickerConfig({
+                      isOpen: true,
+                      filterType: "IMAGE",
+                      title: "Select Global Social Sharing Image from Library",
+                      onSelect: (url) => setSeoForm((prev) => ({ ...prev, defaultOgImageUrl: url })),
+                    })
+                  }
+                  className="px-3.5 py-2.5 bg-neutral-100 hover:bg-neutral-200 text-neutral-800 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition shrink-0"
+                >
+                  <FolderOpen className="w-3.5 h-3.5 text-amber-700" />
+                  <span>Library</span>
+                </button>
                 <label className="px-4 py-2.5 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 rounded-xl text-xs font-semibold cursor-pointer flex items-center gap-1.5">
                   <Upload className="w-3.5 h-3.5" />
                   <span>Upload</span>
@@ -2389,6 +2446,20 @@ export function ContentManagementView({
             </div>
           </div>
         </div>
+      )}
+
+      {/* Central Media Gallery Picker Modal */}
+      {mediaPickerConfig && (
+        <MediaPickerModal
+          isOpen={mediaPickerConfig.isOpen}
+          title={mediaPickerConfig.title || "Select Media Asset"}
+          filterType={mediaPickerConfig.filterType || "ALL"}
+          onClose={() => setMediaPickerConfig(null)}
+          onSelect={(selected) => {
+            mediaPickerConfig.onSelect(selected.url);
+            setMediaPickerConfig(null);
+          }}
+        />
       )}
     </div>
   );

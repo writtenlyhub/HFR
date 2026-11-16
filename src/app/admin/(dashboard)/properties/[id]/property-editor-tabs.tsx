@@ -26,7 +26,9 @@ import {
   MoveUp,
   MoveDown,
   Info,
+  FolderOpen,
 } from "lucide-react";
+import { MediaPickerModal } from "@/components/admin/media-picker-modal";
 import {
   updatePropertyGeneral,
   updatePropertyPolicies,
@@ -37,6 +39,7 @@ import {
 import {
   updatePropertySEO,
   uploadPropertyImages,
+  attachMediaAssetToProperty,
   setCoverImage,
   deletePropertyImage,
   updateImageDetails,
@@ -166,6 +169,7 @@ export function PropertyEditorTabs({ property: initialProperty }: PropertyEditor
   // Gallery state
   const [images, setImages] = useState(initialProperty.images);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [showMediaPicker, setShowMediaPicker] = useState<"gallery" | "ogImage" | null>(null);
 
   // Amenities state
   const [amenities, setAmenities] = useState(initialProperty.amenities);
@@ -1038,13 +1042,23 @@ export function PropertyEditorTabs({ property: initialProperty }: PropertyEditor
                 className="hidden"
                 id="file-upload-input"
               />
-              <label
-                htmlFor="file-upload-input"
-                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-neutral-900 hover:bg-black text-white text-xs font-bold transition shadow-xs cursor-pointer"
-              >
-                <Upload className="w-4 h-4" />
-                <span>Upload Photos</span>
-              </label>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowMediaPicker("gallery")}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl border border-neutral-300 bg-white hover:bg-neutral-50 text-neutral-800 text-xs font-bold transition shadow-2xs"
+                >
+                  <FolderOpen className="w-4 h-4 text-amber-600" />
+                  <span>Choose from Media Library</span>
+                </button>
+                <label
+                  htmlFor="file-upload-input"
+                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-neutral-900 hover:bg-black text-white text-xs font-bold transition shadow-xs cursor-pointer"
+                >
+                  <Upload className="w-4 h-4" />
+                  <span>Upload Photos</span>
+                </label>
+              </div>
             </div>
 
             {/* Gallery Grid */}
@@ -1432,13 +1446,23 @@ export function PropertyEditorTabs({ property: initialProperty }: PropertyEditor
                 <label className="block text-xs font-semibold text-neutral-700 mb-1">
                   Social Sharing Image URL
                 </label>
-                <input
-                  type="text"
-                  value={ogImageUrl}
-                  onChange={(e) => setOgImageUrl(e.target.value)}
-                  placeholder="https://... or /uploads/..."
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-200 text-xs text-neutral-900 focus:outline-none focus:ring-2 focus:ring-neutral-900"
-                />
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={ogImageUrl}
+                    onChange={(e) => setOgImageUrl(e.target.value)}
+                    placeholder="https://... or /uploads/..."
+                    className="flex-1 px-3.5 py-2.5 rounded-xl border border-neutral-200 text-xs text-neutral-900 focus:outline-none focus:ring-2 focus:ring-neutral-900"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowMediaPicker("ogImage")}
+                    className="px-3.5 py-2.5 bg-neutral-100 hover:bg-neutral-200 text-neutral-800 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition shrink-0"
+                  >
+                    <FolderOpen className="w-3.5 h-3.5 text-amber-700" />
+                    <span>Library</span>
+                  </button>
+                </div>
               </div>
 
               <div className="sm:col-span-2">
@@ -1616,6 +1640,42 @@ export function PropertyEditorTabs({ property: initialProperty }: PropertyEditor
             )}
           </div>
         </div>
+      )}
+
+      {/* Central Media Picker Modal */}
+      {showMediaPicker && (
+        <MediaPickerModal
+          isOpen={Boolean(showMediaPicker)}
+          filterType="IMAGE"
+          title={
+            showMediaPicker === "ogImage"
+              ? "Select Social Sharing Image from Central Gallery"
+              : "Select Image from Central Media Gallery"
+          }
+          onClose={() => setShowMediaPicker(null)}
+          onSelect={(selected) => {
+            if (showMediaPicker === "ogImage") {
+              setOgImageUrl(selected.url);
+              setFeedback({ type: "success", text: "OG Image selected from library. Remember to save SEO changes." });
+            } else if (showMediaPicker === "gallery") {
+              startTransition(async () => {
+                const res = await attachMediaAssetToProperty(
+                  initialProperty.id,
+                  selected.url,
+                  selected.title,
+                  selected.altText
+                );
+                if (res.success && res.data) {
+                  setImages((prev) => [...prev, res.data as any]);
+                  setFeedback({ type: "success", text: "Image added to property gallery." });
+                } else {
+                  setFeedback({ type: "error", text: res.error || "Failed to attach image." });
+                }
+              });
+            }
+            setShowMediaPicker(null);
+          }}
+        />
       )}
     </div>
   );
