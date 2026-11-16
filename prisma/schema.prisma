@@ -43,6 +43,7 @@ enum BlockReason {
   EXTERNAL_BOOKING
   ADMIN_MAINTENANCE
   SEASONAL_CLOSURE
+  ADMIN_BLOCKED
 }
 
 enum PaymentStatus {
