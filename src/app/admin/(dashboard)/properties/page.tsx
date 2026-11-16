@@ -45,6 +45,8 @@ export default async function AdminPropertiesPage() {
       country: p.country,
       postalCode: p.postalCode,
       isActive: p.isActive,
+      isArchived: p.isArchived,
+      archivedReason: p.archivedReason,
       createdAt: p.createdAt.toISOString(),
       inventoryGroupCode: p.inventoryGroups[0]?.code,
       configurationsCount: p.listingOptions.length,

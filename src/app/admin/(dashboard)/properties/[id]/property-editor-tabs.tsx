@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useTransition } from "react";
+import React, { useState, useTransition, useRef } from "react";
 import Link from "next/link";
 import {
   Building2,
@@ -17,6 +17,15 @@ import {
   ExternalLink,
   Shield,
   Save,
+  Globe,
+  Images,
+  Upload,
+  Star,
+  Archive,
+  RotateCcw,
+  MoveUp,
+  MoveDown,
+  Info,
 } from "lucide-react";
 import {
   updatePropertyGeneral,
@@ -25,6 +34,18 @@ import {
   addPropertyAmenity,
   removePropertyAmenity,
 } from "./edit-actions";
+import {
+  updatePropertySEO,
+  uploadPropertyImages,
+  setCoverImage,
+  deletePropertyImage,
+  updateImageDetails,
+  reorderPropertyImages,
+  validatePropertyForPublish,
+  publishPropertyWithValidation,
+  archiveProperty,
+  restoreProperty,
+} from "../phase3-actions";
 import { togglePropertyPublish } from "../actions";
 
 export interface PropertyEditorProps {
@@ -46,6 +67,15 @@ export interface PropertyEditorProps {
     houseRules: string | null;
     cancellationPolicy: string | null;
     isActive: boolean;
+    isArchived: boolean;
+    archivedReason: string | null;
+    seoTitle: string | null;
+    seoDescription: string | null;
+    canonicalUrl: string | null;
+    ogTitle: string | null;
+    ogDescription: string | null;
+    ogImageUrl: string | null;
+    previousSlugs: string[];
     inventoryGroups: Array<{
       id: string;
       code: string;
@@ -76,6 +106,9 @@ export interface PropertyEditorProps {
       id: string;
       url: string;
       caption: string | null;
+      altText: string | null;
+      category: string | null;
+      sortOrder: number;
       isCover: boolean;
     }>;
   };
@@ -83,13 +116,14 @@ export interface PropertyEditorProps {
 
 export function PropertyEditorTabs({ property: initialProperty }: PropertyEditorProps) {
   const [activeTab, setActiveTab] = useState<
-    "general" | "configurations" | "amenities" | "policies" | "publish"
+    "general" | "configurations" | "gallery" | "amenities" | "policies" | "seo" | "publish"
   >("general");
 
   const [isPending, startTransition] = useTransition();
   const [feedback, setFeedback] = useState<{
     type: "success" | "error";
     text: string;
+    errors?: string[];
   } | null>(null);
 
   // General tab state
@@ -112,8 +146,26 @@ export function PropertyEditorTabs({ property: initialProperty }: PropertyEditor
     initialProperty.cancellationPolicy || ""
   );
 
-  // Publication state
+  // SEO tab state
+  const [slug, setSlug] = useState(initialProperty.slug);
+  const [seoTitle, setSeoTitle] = useState(initialProperty.seoTitle || "");
+  const [seoDescription, setSeoDescription] = useState(initialProperty.seoDescription || "");
+  const [canonicalUrl, setCanonicalUrl] = useState(initialProperty.canonicalUrl || "");
+  const [ogTitle, setOgTitle] = useState(initialProperty.ogTitle || "");
+  const [ogDescription, setOgDescription] = useState(initialProperty.ogDescription || "");
+  const [ogImageUrl, setOgImageUrl] = useState(initialProperty.ogImageUrl || "");
+  const [previousSlugs, setPreviousSlugs] = useState(initialProperty.previousSlugs || []);
+
+  // Publication & Archival state
   const [isActive, setIsActive] = useState(initialProperty.isActive);
+  const [isArchived, setIsArchived] = useState(initialProperty.isArchived);
+  const [archivedReason, setArchivedReason] = useState(initialProperty.archivedReason || "");
+  const [validationChecklist, setValidationChecklist] = useState<string[]>([]);
+  const [validationChecked, setValidationChecked] = useState(false);
+
+  // Gallery state
+  const [images, setImages] = useState(initialProperty.images);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Amenities state
   const [amenities, setAmenities] = useState(initialProperty.amenities);
@@ -122,7 +174,10 @@ export function PropertyEditorTabs({ property: initialProperty }: PropertyEditor
   // Configurations state
   const [configurations, setConfigurations] = useState(initialProperty.listingOptions);
 
+  // -------------------------------------------------------------
   // Handlers
+  // -------------------------------------------------------------
+
   const handleSaveGeneral = () => {
     setFeedback(null);
     startTransition(async () => {
@@ -165,16 +220,182 @@ export function PropertyEditorTabs({ property: initialProperty }: PropertyEditor
     });
   };
 
-  const handleTogglePublish = () => {
+  const handleSaveSEO = () => {
     setFeedback(null);
     startTransition(async () => {
-      const res = await togglePropertyPublish(initialProperty.id, isActive);
+      const res = await updatePropertySEO(initialProperty.id, {
+        slug,
+        seoTitle,
+        seoDescription,
+        canonicalUrl,
+        ogTitle,
+        ogDescription,
+        ogImageUrl,
+      });
+
       if (res.success) {
-        setIsActive(!isActive);
-        setFeedback({ type: "success", text: res.message || "Updated status." });
+        if (slug !== initialProperty.slug && !previousSlugs.includes(initialProperty.slug)) {
+          setPreviousSlugs((prev) => [...prev, initialProperty.slug]);
+        }
+        setFeedback({ type: "success", text: res.message || "SEO metadata updated." });
       } else {
-        setFeedback({ type: "error", text: res.error || "Failed to toggle status." });
+        setFeedback({ type: "error", text: res.error || "Failed to update SEO." });
       }
+    });
+  };
+
+  const handleRunValidationCheck = () => {
+    setFeedback(null);
+    startTransition(async () => {
+      const result = await validatePropertyForPublish(initialProperty.id);
+      setValidationChecked(true);
+      setValidationChecklist(result.errors);
+      if (result.valid) {
+        setFeedback({ type: "success", text: "Ready to publish: Property meets all publication requirements." });
+      } else {
+        setFeedback({
+          type: "error",
+          text: `Found ${result.errors.length} requirement(s) to resolve before publishing live.`,
+          errors: result.errors,
+        });
+      }
+    });
+  };
+
+  const handlePublishWithPreflight = () => {
+    setFeedback(null);
+    startTransition(async () => {
+      const res = await publishPropertyWithValidation(initialProperty.id);
+      if (res.success) {
+        setIsActive(true);
+        setIsArchived(false);
+        setValidationChecklist([]);
+        setFeedback({ type: "success", text: res.message || "Published live." });
+      } else {
+        setValidationChecked(true);
+        setValidationChecklist(res.errors || []);
+        setFeedback({
+          type: "error",
+          text: res.error || "Validation requirements missing.",
+          errors: res.errors,
+        });
+      }
+    });
+  };
+
+  const handleUnpublishToDraft = () => {
+    setFeedback(null);
+    startTransition(async () => {
+      const res = await togglePropertyPublish(initialProperty.id, true);
+      if (res.success) {
+        setIsActive(false);
+        setFeedback({ type: "success", text: res.message || "Moved to Draft." });
+      } else {
+        setFeedback({ type: "error", text: res.error || "Failed to unpublish." });
+      }
+    });
+  };
+
+  const handleArchiveProperty = (reason?: string) => {
+    setFeedback(null);
+    startTransition(async () => {
+      const res = await archiveProperty(initialProperty.id, reason);
+      if (res.success) {
+        setIsArchived(true);
+        setIsActive(false);
+        setFeedback({ type: "success", text: res.message || "Archived." });
+      } else {
+        setFeedback({ type: "error", text: res.error || "Cannot archive property." });
+      }
+    });
+  };
+
+  const handleRestoreProperty = () => {
+    setFeedback(null);
+    startTransition(async () => {
+      const res = await restoreProperty(initialProperty.id);
+      if (res.success) {
+        setIsArchived(false);
+        setIsActive(false);
+        setFeedback({ type: "success", text: res.message || "Restored as Draft." });
+      } else {
+        setFeedback({ type: "error", text: res.error || "Failed to restore." });
+      }
+    });
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    const formData = new FormData();
+    for (let i = 0; i < files.length; i++) {
+      formData.append("files", files[i]);
+    }
+
+    setFeedback(null);
+    startTransition(async () => {
+      const res = await uploadPropertyImages(initialProperty.id, formData);
+      if (res.success) {
+        setFeedback({ type: "success", text: res.message || "Images uploaded." });
+        if (fileInputRef.current) fileInputRef.current.value = "";
+      } else {
+        setFeedback({ type: "error", text: res.error || "Upload failed." });
+      }
+    });
+  };
+
+  const handleSetCover = (imageId: string) => {
+    setFeedback(null);
+    startTransition(async () => {
+      const res = await setCoverImage(initialProperty.id, imageId);
+      if (res.success) {
+        setImages((prev) =>
+          prev.map((img) => ({ ...img, isCover: img.id === imageId }))
+        );
+        setFeedback({ type: "success", text: "Primary cover photograph updated." });
+      } else {
+        setFeedback({ type: "error", text: res.error || "Failed to set cover." });
+      }
+    });
+  };
+
+  const handleDeleteImage = (imageId: string) => {
+    setFeedback(null);
+    startTransition(async () => {
+      const res = await deletePropertyImage(initialProperty.id, imageId);
+      if (res.success) {
+        setImages((prev) => prev.filter((img) => img.id !== imageId));
+        setFeedback({ type: "success", text: "Photograph removed." });
+      } else {
+        setFeedback({ type: "error", text: res.error || "Failed to delete image." });
+      }
+    });
+  };
+
+  const handleMoveImage = (index: number, direction: "up" | "down") => {
+    const targetIndex = direction === "up" ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= images.length) return;
+
+    const reordered = [...images];
+    const temp = reordered[index];
+    reordered[index] = reordered[targetIndex];
+    reordered[targetIndex] = temp;
+
+    setImages(reordered);
+    const orderedIds = reordered.map((img) => img.id);
+
+    startTransition(async () => {
+      const res = await reorderPropertyImages(initialProperty.id, orderedIds);
+      if (res.success) {
+        setFeedback({ type: "success", text: "Gallery sequence updated." });
+      }
+    });
+  };
+
+  const handleUpdateImageText = (imageId: string, caption?: string, altText?: string) => {
+    startTransition(async () => {
+      await updateImageDetails(initialProperty.id, imageId, { caption, altText });
     });
   };
 
@@ -248,7 +469,7 @@ export function PropertyEditorTabs({ property: initialProperty }: PropertyEditor
   const primaryInventoryGroup = initialProperty.inventoryGroups[0];
 
   return (
-    <div className="space-y-6 max-w-5xl mx-auto pb-12">
+    <div className="space-y-6 max-w-5xl mx-auto pb-16">
       {/* Top Header & Breadcrumbs */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="space-y-1">
@@ -265,67 +486,99 @@ export function PropertyEditorTabs({ property: initialProperty }: PropertyEditor
             </h1>
             <span
               className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${
-                isActive
+                isArchived
+                  ? "bg-neutral-900/80 text-neutral-300 border-neutral-700"
+                  : isActive
                   ? "bg-emerald-50 text-emerald-700 border-emerald-200"
                   : "bg-amber-50 text-amber-700 border-amber-200"
               }`}
             >
-              {isActive ? "Published" : "Draft"}
+              {isArchived ? "Archived" : isActive ? "Published" : "Draft"}
             </span>
           </div>
         </div>
 
+        {/* Global Property Action Buttons */}
         <div className="flex items-center gap-2">
-          {isActive && (
+          {/* Preview / Live Page Link */}
+          {!isArchived && (
             <Link
-              href={`/properties/${initialProperty.slug}`}
+              href={`/properties/${slug}`}
               target="_blank"
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-neutral-200 bg-white hover:bg-neutral-50 text-xs font-semibold text-neutral-700 transition shadow-2xs"
             >
-              <span>Live Page</span>
-              <ExternalLink className="w-3.5 h-3.5 text-neutral-400" />
+              <Eye className="w-3.5 h-3.5 text-neutral-500" />
+              <span>{isActive ? "Live Page ↗" : "Preview Draft ↗"}</span>
             </Link>
           )}
 
-          <button
-            type="button"
-            disabled={isPending}
-            onClick={handleTogglePublish}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition border shadow-xs ${
-              isActive
-                ? "bg-white text-neutral-700 border-neutral-300 hover:bg-neutral-100"
-                : "bg-emerald-600 hover:bg-emerald-700 text-white border-transparent"
-            }`}
-          >
-            {isActive ? "Unpublish to Draft" : "Publish Live"}
-          </button>
+          {/* Quick Publish / Unpublish / Restore */}
+          {isArchived ? (
+            <button
+              type="button"
+              disabled={isPending}
+              onClick={handleRestoreProperty}
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white border border-neutral-300 hover:bg-neutral-100 text-xs font-bold text-neutral-800 transition"
+            >
+              <RotateCcw className="w-3.5 h-3.5 text-neutral-600" />
+              <span>Restore Property</span>
+            </button>
+          ) : isActive ? (
+            <button
+              type="button"
+              disabled={isPending}
+              onClick={handleUnpublishToDraft}
+              className="px-4 py-2 rounded-xl text-xs font-bold transition border border-neutral-300 bg-white hover:bg-neutral-100 text-neutral-700"
+            >
+              Unpublish to Draft
+            </button>
+          ) : (
+            <button
+              type="button"
+              disabled={isPending}
+              onClick={handlePublishWithPreflight}
+              className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition shadow-xs"
+            >
+              {isPending ? "Validating..." : "Publish Live"}
+            </button>
+          )}
         </div>
       </div>
 
       {/* Status Feedback Alert */}
       {feedback && (
         <div
-          className={`p-3.5 rounded-xl text-xs flex items-center justify-between transition ${
+          className={`p-4 rounded-xl text-xs space-y-2 transition ${
             feedback.type === "success"
               ? "bg-emerald-50 border border-emerald-200 text-emerald-800"
               : "bg-red-50 border border-red-200 text-red-800"
           }`}
         >
-          <div className="flex items-center gap-2">
-            {feedback.type === "success" ? (
-              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-            ) : (
-              <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
-            )}
-            <span>{feedback.text}</span>
+          <div className="flex items-center justify-between font-bold">
+            <div className="flex items-center gap-2">
+              {feedback.type === "success" ? (
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+              ) : (
+                <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
+              )}
+              <span>{feedback.text}</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setFeedback(null)}
+              className="text-[11px] font-bold uppercase tracking-wider hover:underline"
+            >
+              Dismiss
+            </button>
           </div>
-          <button
-            type="button"
-            onClick={() => setFeedback(null)}
-            className="text-[10px] font-bold uppercase tracking-wider hover:underline"
-          >
-            Dismiss
-          </button>
+
+          {feedback.errors && feedback.errors.length > 0 && (
+            <ul className="list-disc pl-5 space-y-1 text-red-700 text-xs font-medium pt-1">
+              {feedback.errors.map((err, idx) => (
+                <li key={idx}>{err}</li>
+              ))}
+            </ul>
+          )}
         </div>
       )}
 
@@ -341,7 +594,7 @@ export function PropertyEditorTabs({ property: initialProperty }: PropertyEditor
           }`}
         >
           <Building2 className="w-4 h-4" />
-          <span>General &amp; Location</span>
+          <span>General Info</span>
         </button>
 
         <button
@@ -355,6 +608,19 @@ export function PropertyEditorTabs({ property: initialProperty }: PropertyEditor
         >
           <Layers className="w-4 h-4" />
           <span>Room Configurations ({configurations.length})</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab("gallery")}
+          className={`pb-3 px-3 border-b-2 transition flex items-center gap-2 shrink-0 ${
+            activeTab === "gallery"
+              ? "border-neutral-900 text-neutral-900"
+              : "border-transparent text-neutral-500 hover:text-neutral-800"
+          }`}
+        >
+          <Images className="w-4 h-4" />
+          <span>Photography ({images.length})</span>
         </button>
 
         <button
@@ -385,6 +651,19 @@ export function PropertyEditorTabs({ property: initialProperty }: PropertyEditor
 
         <button
           type="button"
+          onClick={() => setActiveTab("seo")}
+          className={`pb-3 px-3 border-b-2 transition flex items-center gap-2 shrink-0 ${
+            activeTab === "seo"
+              ? "border-neutral-900 text-neutral-900"
+              : "border-transparent text-neutral-500 hover:text-neutral-800"
+          }`}
+        >
+          <Globe className="w-4 h-4" />
+          <span>SEO &amp; Social</span>
+        </button>
+
+        <button
+          type="button"
           onClick={() => setActiveTab("publish")}
           className={`pb-3 px-3 border-b-2 transition flex items-center gap-2 shrink-0 ${
             activeTab === "publish"
@@ -392,12 +671,12 @@ export function PropertyEditorTabs({ property: initialProperty }: PropertyEditor
               : "border-transparent text-neutral-500 hover:text-neutral-800"
           }`}
         >
-          <Eye className="w-4 h-4" />
-          <span>Publication &amp; Metadata</span>
+          <Archive className="w-4 h-4" />
+          <span>Publish &amp; Archival</span>
         </button>
       </div>
 
-      {/* Tab 1: General & Location */}
+      {/* Tab 1: General Info */}
       {activeTab === "general" && (
         <div className="space-y-6">
           <div className="p-6 rounded-2xl bg-white border border-neutral-200/80 shadow-2xs space-y-4">
@@ -540,10 +819,9 @@ export function PropertyEditorTabs({ property: initialProperty }: PropertyEditor
         </div>
       )}
 
-      {/* Tab 2: Room Configurations (Hierarchical Shared Inventory) */}
+      {/* Tab 2: Configurations (Shared Inventory) */}
       {activeTab === "configurations" && (
         <div className="space-y-6">
-          {/* Shared Inventory Anchor Banner */}
           <div className="p-4 rounded-xl bg-amber-50/70 border border-amber-200 text-xs text-amber-900 flex items-start gap-3">
             <Shield className="w-4 h-4 text-amber-700 shrink-0 mt-0.5" />
             <div>
@@ -556,7 +834,6 @@ export function PropertyEditorTabs({ property: initialProperty }: PropertyEditor
             </div>
           </div>
 
-          {/* Configuration Cards List */}
           <div className="space-y-4">
             {configurations.map((config) => (
               <div
@@ -566,7 +843,7 @@ export function PropertyEditorTabs({ property: initialProperty }: PropertyEditor
                 <div className="flex items-center justify-between pb-3 border-b border-neutral-100">
                   <div className="flex items-center gap-2.5">
                     <span className="font-mono text-xs text-neutral-400">
-                      /properties/{initialProperty.slug}/{config.slug}
+                      /properties/{slug}/{config.slug}
                     </span>
                     <span
                       className={`px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider ${
@@ -737,7 +1014,162 @@ export function PropertyEditorTabs({ property: initialProperty }: PropertyEditor
         </div>
       )}
 
-      {/* Tab 3: Amenities Management */}
+      {/* Tab 3: Photography & Media Gallery */}
+      {activeTab === "gallery" && (
+        <div className="space-y-6">
+          {/* Upload Area */}
+          <div className="p-6 rounded-2xl bg-white border border-neutral-200/80 shadow-2xs space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-neutral-100">
+              <div>
+                <h3 className="text-sm font-bold uppercase tracking-wider text-neutral-900">
+                  Upload Photography
+                </h3>
+                <p className="text-xs text-neutral-500">
+                  Select high-resolution JPEG, PNG, or WebP images (up to 8 MB per image).
+                </p>
+              </div>
+
+              <input
+                ref={fileInputRef}
+                type="file"
+                multiple
+                accept="image/jpeg,image/png,image/webp,image/avif"
+                onChange={handleFileUpload}
+                className="hidden"
+                id="file-upload-input"
+              />
+              <label
+                htmlFor="file-upload-input"
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-neutral-900 hover:bg-black text-white text-xs font-bold transition shadow-xs cursor-pointer"
+              >
+                <Upload className="w-4 h-4" />
+                <span>Upload Photos</span>
+              </label>
+            </div>
+
+            {/* Gallery Grid */}
+            {images.length === 0 ? (
+              <div className="text-center py-12 text-neutral-400 text-xs space-y-2">
+                <Images className="w-10 h-10 mx-auto text-neutral-300" />
+                <p>No photographs uploaded yet. Upload images to display in the gallery.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 pt-2">
+                {images.map((img, idx) => (
+                  <div
+                    key={img.id}
+                    className={`rounded-2xl border bg-white overflow-hidden shadow-2xs flex flex-col justify-between ${
+                      img.isCover ? "border-amber-400 ring-2 ring-amber-400/20" : "border-neutral-200/80"
+                    }`}
+                  >
+                    <div>
+                      {/* Image Preview with Cover Tag */}
+                      <div className="relative aspect-16/10 bg-neutral-100 overflow-hidden">
+                        <img
+                          src={img.url}
+                          alt={img.altText || img.caption || "Property image"}
+                          className="w-full h-full object-cover"
+                        />
+                        <div className="absolute top-2.5 inset-x-2.5 flex items-center justify-between pointer-events-none">
+                          {img.isCover ? (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-400 text-neutral-950 text-[10px] font-extrabold uppercase tracking-wider shadow-sm">
+                              <Star className="w-3 h-3 fill-neutral-950" />
+                              <span>Cover Photo</span>
+                            </span>
+                          ) : (
+                            <span className="px-2 py-0.5 rounded-md bg-black/60 text-white text-[10px] font-mono backdrop-blur-md">
+                              #{idx + 1}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Caption & Alt Text */}
+                      <div className="p-3.5 space-y-2">
+                        <div>
+                          <label className="block text-[10px] font-bold uppercase tracking-wider text-neutral-400 mb-0.5">
+                            Caption
+                          </label>
+                          <input
+                            type="text"
+                            defaultValue={img.caption || ""}
+                            onBlur={(e) => handleUpdateImageText(img.id, e.target.value, img.altText || undefined)}
+                            placeholder="e.g. Master Bedroom Courtyard View"
+                            className="w-full px-2.5 py-1.5 rounded-lg border border-neutral-200 text-xs text-neutral-900 focus:outline-none focus:ring-1 focus:ring-neutral-900"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-[10px] font-bold uppercase tracking-wider text-neutral-400 mb-0.5">
+                            Alt Text (SEO &amp; Accessibility)
+                          </label>
+                          <input
+                            type="text"
+                            defaultValue={img.altText || ""}
+                            onBlur={(e) => handleUpdateImageText(img.id, img.caption || undefined, e.target.value)}
+                            placeholder="Descriptive alt text for screen readers..."
+                            className="w-full px-2.5 py-1.5 rounded-lg border border-neutral-200 text-xs text-neutral-900 focus:outline-none focus:ring-1 focus:ring-neutral-900"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Controls Footer */}
+                    <div className="p-2.5 bg-neutral-50/80 border-t border-neutral-100 flex items-center justify-between gap-1 text-xs">
+                      {/* Reorder Arrows */}
+                      <div className="flex items-center gap-1">
+                        <button
+                          type="button"
+                          disabled={idx === 0 || isPending}
+                          onClick={() => handleMoveImage(idx, "up")}
+                          className="p-1 rounded text-neutral-500 hover:text-neutral-900 hover:bg-neutral-200 disabled:opacity-30 transition"
+                          title="Move earlier in gallery"
+                        >
+                          <MoveUp className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          disabled={idx === images.length - 1 || isPending}
+                          onClick={() => handleMoveImage(idx, "down")}
+                          className="p-1 rounded text-neutral-500 hover:text-neutral-900 hover:bg-neutral-200 disabled:opacity-30 transition"
+                          title="Move later in gallery"
+                        >
+                          <MoveDown className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+
+                      <div className="flex items-center gap-1.5">
+                        {!img.isCover && (
+                          <button
+                            type="button"
+                            disabled={isPending}
+                            onClick={() => handleSetCover(img.id)}
+                            className="px-2 py-1 rounded text-[11px] font-semibold text-neutral-700 hover:text-amber-800 hover:bg-amber-50 transition border border-transparent hover:border-amber-200"
+                          >
+                            Set as Cover
+                          </button>
+                        )}
+
+                        <button
+                          type="button"
+                          disabled={isPending}
+                          onClick={() => handleDeleteImage(img.id)}
+                          className="p-1.5 rounded text-neutral-400 hover:text-red-700 hover:bg-red-50 transition"
+                          title="Delete photograph"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Tab 4: Amenities */}
       {activeTab === "amenities" && (
         <div className="space-y-6">
           <div className="p-6 rounded-2xl bg-white border border-neutral-200/80 shadow-2xs space-y-4">
@@ -745,7 +1177,6 @@ export function PropertyEditorTabs({ property: initialProperty }: PropertyEditor
               Manage Estate Amenities
             </h3>
 
-            {/* Add Amenity Form */}
             <div className="flex gap-2">
               <input
                 type="text"
@@ -771,7 +1202,6 @@ export function PropertyEditorTabs({ property: initialProperty }: PropertyEditor
               </button>
             </div>
 
-            {/* Existing Amenities Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 pt-3">
               {amenities.map((item) => (
                 <div
@@ -795,7 +1225,7 @@ export function PropertyEditorTabs({ property: initialProperty }: PropertyEditor
         </div>
       )}
 
-      {/* Tab 4: Policies & Hours */}
+      {/* Tab 5: Policies & Operating Hours */}
       {activeTab === "policies" && (
         <div className="space-y-6">
           <div className="p-6 rounded-2xl bg-white border border-neutral-200/80 shadow-2xs space-y-4">
@@ -868,60 +1298,322 @@ export function PropertyEditorTabs({ property: initialProperty }: PropertyEditor
         </div>
       )}
 
-      {/* Tab 5: Publication & Metadata */}
-      {activeTab === "publish" && (
+      {/* Tab 6: SEO & Social Sharing Management */}
+      {activeTab === "seo" && (
         <div className="space-y-6">
           <div className="p-6 rounded-2xl bg-white border border-neutral-200/80 shadow-2xs space-y-4">
+            <div className="flex items-center gap-2 pb-3 border-b border-neutral-100">
+              <Globe className="w-4 h-4 text-amber-700" />
+              <h3 className="text-sm font-bold uppercase tracking-wider text-neutral-900">
+                URL Slug &amp; Permanent Redirect Tracking
+              </h3>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-neutral-700 mb-1">
+                Property URL Slug
+              </label>
+              <div className="relative">
+                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-mono text-neutral-400">
+                  /properties/
+                </span>
+                <input
+                  type="text"
+                  required
+                  value={slug}
+                  onChange={(e) => setSlug(e.target.value)}
+                  className="w-full pl-24 pr-3.5 py-2.5 rounded-xl border border-neutral-200 text-xs font-mono text-neutral-900 focus:outline-none focus:ring-2 focus:ring-neutral-900"
+                />
+              </div>
+              <p className="text-[11px] text-neutral-500 mt-1.5 flex items-center gap-1.5">
+                <Info className="w-3.5 h-3.5 text-neutral-400 shrink-0" />
+                <span>
+                  Changing the slug will automatically register the old slug as a permanent 308 redirect, preserving existing bookmarks and Google search rankings.
+                </span>
+              </p>
+            </div>
+
+            {previousSlugs.length > 0 && (
+              <div className="p-3.5 bg-neutral-50 rounded-xl border border-neutral-200/70 text-xs space-y-1">
+                <span className="font-bold text-neutral-700 block text-[11px] uppercase tracking-wider">
+                  Active Redirect History ({previousSlugs.length})
+                </span>
+                <div className="flex flex-wrap gap-1.5">
+                  {previousSlugs.map((oldSlug, idx) => (
+                    <span
+                      key={idx}
+                      className="px-2 py-0.5 rounded-md bg-white border border-neutral-200 font-mono text-[11px] text-neutral-600"
+                    >
+                      /properties/{oldSlug} → 308
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="p-6 rounded-2xl bg-white border border-neutral-200/80 shadow-2xs space-y-4">
             <h3 className="text-sm font-bold uppercase tracking-wider text-neutral-900">
-              Visibility Status
+              Search Engine Optimization (SEO)
             </h3>
 
-            <div className="flex items-center justify-between p-4 rounded-xl bg-neutral-50 border border-neutral-200/80">
-              <div className="space-y-0.5">
-                <span className="font-bold text-xs text-neutral-900 block">
-                  Current Status: {isActive ? "Published Live" : "Draft (Hidden)"}
-                </span>
-                <span className="text-xs text-neutral-500 block">
-                  {isActive
-                    ? "This property is visible to the public and accepting direct reservations."
-                    : "This property is hidden from guests and search engines."}
-                </span>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="sm:col-span-2">
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-xs font-semibold text-neutral-700">
+                    SEO Meta Title
+                  </label>
+                  <span className="text-[10px] text-neutral-400 font-mono">
+                    {seoTitle.length}/60 chars
+                  </span>
+                </div>
+                <input
+                  type="text"
+                  value={seoTitle}
+                  onChange={(e) => setSeoTitle(e.target.value)}
+                  placeholder="e.g. Dev Stays Jaipur | Luxury 3BHK Private Villa in Raja Park"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-200 text-xs text-neutral-900 focus:outline-none focus:ring-2 focus:ring-neutral-900"
+                />
               </div>
 
-              <button
-                type="button"
-                disabled={isPending}
-                onClick={handleTogglePublish}
-                className={`px-4 py-2 rounded-xl text-xs font-bold transition ${
-                  isActive
-                    ? "bg-amber-100 hover:bg-amber-200 text-amber-900"
-                    : "bg-emerald-600 hover:bg-emerald-700 text-white"
-                }`}
-              >
-                {isActive ? "Unpublish to Draft" : "Publish Live"}
-              </button>
+              <div className="sm:col-span-2">
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-xs font-semibold text-neutral-700">
+                    Meta Description
+                  </label>
+                  <span className="text-[10px] text-neutral-400 font-mono">
+                    {seoDescription.length}/160 chars
+                  </span>
+                </div>
+                <textarea
+                  rows={3}
+                  value={seoDescription}
+                  onChange={(e) => setSeoDescription(e.target.value)}
+                  placeholder="A concise summary of the villa, central location, bedrooms, and exclusive private booking benefits..."
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-200 text-xs text-neutral-900 focus:outline-none focus:ring-2 focus:ring-neutral-900"
+                />
+              </div>
+
+              <div className="sm:col-span-2">
+                <label className="block text-xs font-semibold text-neutral-700 mb-1">
+                  Canonical URL (Optional override)
+                </label>
+                <input
+                  type="text"
+                  value={canonicalUrl}
+                  onChange={(e) => setCanonicalUrl(e.target.value)}
+                  placeholder="https://devstaysjaipur.com/properties/dev-stays-jaipur"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-200 text-xs text-neutral-900 focus:outline-none focus:ring-2 focus:ring-neutral-900"
+                />
+              </div>
             </div>
           </div>
 
-          <div className="p-6 rounded-2xl bg-white border border-neutral-200/80 shadow-2xs space-y-3">
+          <div className="p-6 rounded-2xl bg-white border border-neutral-200/80 shadow-2xs space-y-4">
             <h3 className="text-sm font-bold uppercase tracking-wider text-neutral-900">
-              Database Metadata &amp; System Identifiers
+              Open Graph &amp; Social Card Preview
             </h3>
 
-            <div className="divide-y divide-neutral-100 text-xs font-mono">
-              <div className="py-2 flex justify-between">
-                <span className="text-neutral-400">Database ID:</span>
-                <span className="text-neutral-800">{initialProperty.id}</span>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-semibold text-neutral-700 mb-1">
+                  Social Sharing Title (OG Title)
+                </label>
+                <input
+                  type="text"
+                  value={ogTitle}
+                  onChange={(e) => setOgTitle(e.target.value)}
+                  placeholder="Leave empty to use SEO Title"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-200 text-xs text-neutral-900 focus:outline-none focus:ring-2 focus:ring-neutral-900"
+                />
               </div>
-              <div className="py-2 flex justify-between">
-                <span className="text-neutral-400">URL Slug:</span>
-                <span className="text-neutral-800">{initialProperty.slug}</span>
+
+              <div>
+                <label className="block text-xs font-semibold text-neutral-700 mb-1">
+                  Social Sharing Image URL
+                </label>
+                <input
+                  type="text"
+                  value={ogImageUrl}
+                  onChange={(e) => setOgImageUrl(e.target.value)}
+                  placeholder="https://... or /uploads/..."
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-200 text-xs text-neutral-900 focus:outline-none focus:ring-2 focus:ring-neutral-900"
+                />
               </div>
-              <div className="py-2 flex justify-between">
-                <span className="text-neutral-400">Physical Inventory Group:</span>
-                <span className="text-neutral-800">{primaryInventoryGroup?.code || "N/A"}</span>
+
+              <div className="sm:col-span-2">
+                <label className="block text-xs font-semibold text-neutral-700 mb-1">
+                  Social Sharing Description (OG Description)
+                </label>
+                <textarea
+                  rows={2}
+                  value={ogDescription}
+                  onChange={(e) => setOgDescription(e.target.value)}
+                  placeholder="Leave empty to use Meta Description"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-200 text-xs text-neutral-900 focus:outline-none focus:ring-2 focus:ring-neutral-900"
+                />
               </div>
             </div>
+          </div>
+
+          <div className="flex justify-end">
+            <button
+              type="button"
+              disabled={isPending}
+              onClick={handleSaveSEO}
+              className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-neutral-900 hover:bg-black text-white text-xs font-bold transition shadow-sm disabled:opacity-50"
+            >
+              <Save className="w-4 h-4" />
+              <span>{isPending ? "Saving..." : "Save SEO & Redirects"}</span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Tab 7: Publication Validation & Archival */}
+      {activeTab === "publish" && (
+        <div className="space-y-6">
+          {/* Pre-flight Validation Card */}
+          <div className="p-6 rounded-2xl bg-white border border-neutral-200/80 shadow-2xs space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-neutral-100">
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-amber-700" />
+                <h3 className="text-sm font-bold uppercase tracking-wider text-neutral-900">
+                  Pre-Flight Publishing Validation
+                </h3>
+              </div>
+              <button
+                type="button"
+                disabled={isPending}
+                onClick={handleRunValidationCheck}
+                className="px-3 py-1.5 rounded-lg border border-neutral-200 text-xs font-semibold text-neutral-700 hover:bg-neutral-50 transition"
+              >
+                {isPending ? "Checking..." : "Re-run Validation"}
+              </button>
+            </div>
+
+            <p className="text-xs text-neutral-500">
+              DevStay enforces complete data readiness before a property can be published to the public website.
+            </p>
+
+            {validationChecked && (
+              <div
+                className={`p-4 rounded-xl text-xs space-y-2 border ${
+                  validationChecklist.length === 0
+                    ? "bg-emerald-50 border-emerald-200 text-emerald-900"
+                    : "bg-red-50 border-red-200 text-red-900"
+                }`}
+              >
+                <div className="font-bold flex items-center gap-2">
+                  {validationChecklist.length === 0 ? (
+                    <>
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                      <span>Ready to Publish: All requirements satisfied.</span>
+                    </>
+                  ) : (
+                    <>
+                      <AlertCircle className="w-4 h-4 text-red-600" />
+                      <span>
+                        Validation Incomplete ({validationChecklist.length} item(s) require attention):
+                      </span>
+                    </>
+                  )}
+                </div>
+
+                {validationChecklist.length > 0 && (
+                  <ul className="list-disc pl-5 space-y-1 font-medium text-red-700">
+                    {validationChecklist.map((item, idx) => (
+                      <li key={idx}>{item}</li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
+
+            <div className="pt-2 flex items-center justify-between">
+              <div className="text-xs text-neutral-500">
+                Status: <strong>{isActive ? "Published Live" : isArchived ? "Archived" : "Draft"}</strong>
+              </div>
+
+              {!isArchived && (
+                <button
+                  type="button"
+                  disabled={isPending}
+                  onClick={isActive ? handleUnpublishToDraft : handlePublishWithPreflight}
+                  className={`px-6 py-2.5 rounded-xl text-xs font-bold transition shadow-xs ${
+                    isActive
+                      ? "bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-100"
+                      : "bg-emerald-600 hover:bg-emerald-700 text-white"
+                  }`}
+                >
+                  {isActive ? "Unpublish to Draft" : "Validate & Publish Live"}
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Archival & Safety Decommissioning Card */}
+          <div className="p-6 rounded-2xl bg-neutral-50 border border-neutral-200/80 shadow-2xs space-y-4">
+            <div className="flex items-center gap-2 pb-3 border-b border-neutral-200/60">
+              <Archive className="w-4 h-4 text-neutral-700" />
+              <h3 className="text-sm font-bold uppercase tracking-wider text-neutral-900">
+                Property Archival &amp; Lifecycle Safety
+              </h3>
+            </div>
+
+            <p className="text-xs text-neutral-600 leading-relaxed">
+              Archiving hides the property from all search results, direct links, and staff availability queries. 
+              <strong> The system enforces a safety policy preventing archival if any active or upcoming bookings exist.</strong> All historical booking data and inventory records remain permanently preserved.
+            </p>
+
+            {isArchived ? (
+              <div className="p-4 rounded-xl bg-white border border-neutral-200 flex items-center justify-between">
+                <div>
+                  <span className="font-bold text-xs text-neutral-900 block">
+                    Property is Currently Archived
+                  </span>
+                  {archivedReason && (
+                    <span className="text-[11px] text-neutral-500 block">
+                      Reason: {archivedReason}
+                    </span>
+                  )}
+                </div>
+
+                <button
+                  type="button"
+                  disabled={isPending}
+                  onClick={handleRestoreProperty}
+                  className="px-4 py-2 rounded-xl bg-neutral-900 hover:bg-black text-white text-xs font-bold transition shadow-xs"
+                >
+                  Restore to Draft
+                </button>
+              </div>
+            ) : (
+              <div className="p-4 rounded-xl bg-white border border-neutral-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                  <span className="font-bold text-xs text-neutral-900 block">
+                    Decommission or Archive Property
+                  </span>
+                  <span className="text-[11px] text-neutral-500 block">
+                    Safe operation. Will check for active guest reservations before proceeding.
+                  </span>
+                </div>
+
+                <button
+                  type="button"
+                  disabled={isPending}
+                  onClick={() => {
+                    const reason = prompt("Enter archival reason (e.g. Seasonal closure, Property sold):");
+                    if (reason !== null) {
+                      handleArchiveProperty(reason);
+                    }
+                  }}
+                  className="px-4 py-2 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 text-xs font-bold transition shrink-0"
+                >
+                  Archive Property
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}

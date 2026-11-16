@@ -1,7 +1,8 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
+import { Role } from "@prisma/client";
 import { Header } from "@/components/header";
 import { Hero } from "@/components/hero";
 import { TrustLayer } from "@/components/trust-layer";
@@ -15,12 +16,13 @@ import { HouseRules } from "@/components/house-rules";
 import { InquiryForm } from "@/components/inquiry-form";
 import { Footer } from "@/components/footer";
 import Link from "next/link";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, Eye, ShieldAlert, CheckCircle2 } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
 interface PropertyPageProps {
   params: Promise<{ propertySlug: string }> | { propertySlug: string };
+  searchParams?: Promise<{ preview?: string }> | { preview?: string };
 }
 
 export async function generateMetadata(
@@ -29,42 +31,72 @@ export async function generateMetadata(
   const params = await props.params;
   const { propertySlug } = params;
 
-  const property = await prisma.property.findUnique({
+  let property = await prisma.property.findUnique({
     where: { slug: propertySlug },
-    select: { name: true, headline: true, description: true, city: true },
+    select: {
+      name: true,
+      headline: true,
+      description: true,
+      city: true,
+      seoTitle: true,
+      seoDescription: true,
+      canonicalUrl: true,
+      ogTitle: true,
+      ogDescription: true,
+      ogImageUrl: true,
+      isArchived: true,
+      isActive: true,
+    },
   });
 
+  // Check for previous slug 308 redirect
   if (!property) {
+    const redirected = await prisma.property.findFirst({
+      where: { previousSlugs: { has: propertySlug } },
+      select: { slug: true },
+    });
+    if (redirected) {
+      return { title: "Redirecting... | DevStay" };
+    }
     return {
-      title: "Property Not Found | Hotel Federation Rajasthan",
+      title: "Property Not Found | DevStay",
     };
   }
 
-  const title = `${property.name} | Luxury Haveli & Private Suites in ${property.city}`;
+  const title =
+    property.seoTitle ||
+    `${property.name} | Luxury Haveli & Private Suites in ${property.city}`;
   const description =
+    property.seoDescription ||
     property.description?.slice(0, 160) ||
     "An architectural sanctuary in Jaipur offering independently bookable private suites and exclusive villa buyouts.";
+
+  const canonical = property.canonicalUrl || `/properties/${propertySlug}`;
+  const ogTitle = property.ogTitle || title;
+  const ogDescription = property.ogDescription || description;
 
   return {
     title,
     description,
     alternates: {
-      canonical: `/properties/${propertySlug}`,
+      canonical,
     },
     openGraph: {
-      title,
-      description,
+      title: ogTitle,
+      description: ogDescription,
       type: "website",
       locale: "en_IN",
+      images: property.ogImageUrl ? [{ url: property.ogImageUrl }] : undefined,
     },
   };
 }
 
 export default async function PropertyOverviewPage(props: PropertyPageProps) {
   const params = await props.params;
+  const searchParams = props.searchParams ? await props.searchParams : {};
   const { propertySlug } = params;
 
-  const property = await prisma.property.findUnique({
+  let property = await prisma.property.findUnique({
     where: { slug: propertySlug },
     include: {
       inventoryGroups: true,
@@ -81,10 +113,36 @@ export default async function PropertyOverviewPage(props: PropertyPageProps) {
     },
   });
 
+  // Check if this was a previous slug that requires a 308 permanent redirect
   if (!property) {
+    const redirected = await prisma.property.findFirst({
+      where: { previousSlugs: { has: propertySlug } },
+      select: { slug: true },
+    });
+    if (redirected) {
+      redirect(`/properties/${redirected.slug}`);
+    }
     notFound();
   }
 
+  // Archived properties are NEVER shown to public visitors
+  if (property.isArchived) {
+    notFound();
+  }
+
+  const session = await auth();
+  const isStaff =
+    session?.user &&
+    (session.user.role === Role.ADMIN ||
+      session.user.role === Role.PROPERTY_MANAGER);
+
+  // Draft properties: accessible ONLY if requested by authenticated staff
+  const isDraft = !property.isActive;
+  if (isDraft && !isStaff) {
+    notFound();
+  }
+
+  // Convert Decimals to JavaScript Numbers for safe Client Component serialization
   const serializedListingOptions = property.listingOptions.map((opt) => ({
     ...opt,
     basePricePerNight: Number(opt.basePricePerNight),
@@ -101,84 +159,66 @@ export default async function PropertyOverviewPage(props: PropertyPageProps) {
       return price < min ? price : min;
     }, 8500) ?? 8500;
 
-  const session = await auth();
-
-  // JSON-LD Structured Data
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "LodgingBusiness",
-    name: property.name,
-    description: property.description,
-    address: {
-      "@type": "PostalAddress",
-      streetAddress: property.address,
-      addressLocality: property.city,
-      addressRegion: property.state,
-      postalCode: property.postalCode,
-      addressCountry: property.country,
-    },
-    geo: {
-      "@type": "GeoCoordinates",
-      latitude: property.latitude,
-      longitude: property.longitude,
-    },
-    priceRange: "₹8,500 - ₹28,500",
-    checkinTime: property.checkInTime,
-    checkoutTime: property.checkOutTime,
-  };
-
   return (
-    <div className="min-h-screen flex flex-col bg-[#FCFCFC]">
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
-      <Header session={session} />
-
-      {/* Breadcrumb Bar */}
-      <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-12 pt-4">
-        <nav
-          aria-label="Breadcrumb"
-          className="flex items-center gap-2 text-xs text-neutral-500 font-medium"
-        >
-          <Link href="/" className="hover:text-black transition-colors">
-            Home
+    <div className="min-h-screen bg-[#FDFBF7] text-neutral-900 font-sans selection:bg-amber-100 selection:text-amber-900 antialiased">
+      {/* Sticky Staff Preview Bar for Draft Properties */}
+      {isDraft && (
+        <div className="sticky top-0 z-50 bg-amber-500 text-neutral-950 px-4 py-2.5 text-xs font-bold flex items-center justify-between shadow-md">
+          <div className="flex items-center gap-2">
+            <Eye className="w-4 h-4 text-neutral-950 animate-pulse" />
+            <span>
+              STAFF PREVIEW MODE — This property is currently a DRAFT and hidden from the public.
+            </span>
+          </div>
+          <Link
+            href={`/admin/properties/${property.id}`}
+            className="px-3 py-1 bg-neutral-900 text-white rounded-lg text-[11px] font-semibold hover:bg-black transition"
+          >
+            Open in Editor ↗
           </Link>
-          <ChevronRight size={13} className="text-neutral-400" />
-          <span className="text-neutral-900 font-bold">{property.name}</span>
-        </nav>
-      </div>
+        </div>
+      )}
 
-      <main className="overflow-hidden flex-1">
-        <Hero
-          startingPrice={startingPrice}
-          headline={property.name.toUpperCase()}
-          description={
-            property.description ??
-            "An architectural sanctuary in Jaipur offering independently bookable private suites and exclusive villa buyouts."
-          }
-        />
-        <TrustLayer />
-        <PhotoGallery images={property.images ?? []} />
-        <Accommodations options={serializedListingOptions} />
-        <EstateStory
-          amenities={property.amenities ?? []}
-          listingOptions={serializedListingOptions.map((o) => ({
-            id: o.id,
-            slug: o.slug,
-            title: o.title,
-            basePricePerNight: o.basePricePerNight,
-            maxGuests: o.maxGuests,
-          }))}
-        />
-        <GuestReviews />
-        <LocationSection />
-        <MeetHost />
-        <HouseRules />
-        <InquiryForm />
-      </main>
+      {/* Global Header Navigation */}
+      <Header />
+
+      {/* Hero Visual Section */}
+      <Hero startingPrice={startingPrice} />
+
+      {/* Trust & Guarantee Layer */}
+      <TrustLayer />
+
+      {/* Curated Photography Gallery */}
+      <PhotoGallery images={property.images} />
+
+      {/* Accommodations & Configurations Section */}
+      <Accommodations
+        options={serializedListingOptions}
+      />
+
+      {/* Estate Sanctuary Story & Amenities */}
+      <EstateStory
+        amenities={property.amenities}
+        listingOptions={serializedListingOptions}
+      />
+
+      {/* Guest Reviews Section */}
+      <GuestReviews />
+
+      {/* Location, Neighborhood & Map Section */}
+      <LocationSection />
+
+      {/* Meet Your Host Section */}
+      <MeetHost />
+
+      {/* House Rules & Operational Policies */}
+      <HouseRules />
+
+      {/* Direct Booking Inquiry Form */}
+      <InquiryForm />
+
+      {/* Global Footer */}
       <Footer />
     </div>
   );
 }
-

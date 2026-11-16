@@ -181,6 +181,16 @@ model Property {
   houseRules         String?  @db.Text
   cancellationPolicy String?  @db.Text
   isActive           Boolean  @default(true)
+  isArchived         Boolean  @default(false) @map("is_archived")
+  archivedAt         DateTime? @map("archived_at")
+  archivedReason     String?  @map("archived_reason")
+  seoTitle           String?  @map("seo_title")
+  seoDescription     String?  @map("seo_description") @db.Text
+  canonicalUrl       String?  @map("canonical_url")
+  ogTitle            String?  @map("og_title")
+  ogDescription      String?  @map("og_description") @db.Text
+  ogImageUrl         String?  @map("og_image_url")
+  previousSlugs      String[] @default([]) @map("previous_slugs")
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
 
@@ -192,6 +202,8 @@ model Property {
   bookings         Booking[]
   externalListings ExternalChannelListing[]
 
+  @@index([isArchived])
+  @@index([isActive])
   @@map("properties")
 }
 
@@ -260,6 +272,7 @@ model PropertyImage {
   listingOptionId String?  @map("listing_option_id")
   url             String
   caption         String?
+  altText         String?  @map("alt_text")
   category        String?
   sortOrder       Int      @default(0)
   isCover         Boolean  @default(false)
