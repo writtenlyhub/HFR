@@ -20,6 +20,7 @@ enum BookingStatus {
   PAYMENT_PENDING
   CONFIRMED
   CHECKED_IN
+  CHECKED_OUT
   COMPLETED
   CANCELLED
   PAYMENT_FAILED
@@ -363,6 +364,12 @@ model Booking {
   totalAmount        Decimal       @map("total_amount") @db.Decimal(10, 2)
   cancellationReason String?       @map("cancellation_reason") @db.Text
   cancelledAt        DateTime?     @map("cancelled_at")
+  refundAmount       Decimal?      @map("refund_amount") @db.Decimal(10, 2)
+  checkedInAt        DateTime?     @map("checked_in_at")
+  checkedOutAt       DateTime?     @map("checked_out_at")
+  checkInNotes       String?       @map("check_in_notes") @db.Text
+  checkOutNotes      String?       @map("check_out_notes") @db.Text
+  internalNotes      String?       @map("internal_notes") @db.Text
   source             BookingSource @default(DIRECT_WEB)
   createdAt          DateTime      @default(now())
   updatedAt          DateTime      @updatedAt
