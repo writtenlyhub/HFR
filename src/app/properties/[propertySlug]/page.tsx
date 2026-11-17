@@ -151,6 +151,7 @@ export default async function PropertyOverviewPage(props: PropertyPageProps) {
       : null,
     cleaningFee: Number(opt.cleaningFee),
     taxPercentage: Number(opt.taxPercentage),
+    extraGuestCharge: Number(opt.extraGuestCharge),
   }));
 
   const startingPrice =

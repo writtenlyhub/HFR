@@ -13,6 +13,7 @@ interface ListingOptionData {
   weekendPricePerNight?: number | null;
   cleaningFee?: number;
   taxPercentage?: number;
+  extraGuestCharge?: number;
   summary: string | null;
   description: string;
   coverImage: string | null;
@@ -139,6 +140,11 @@ export function Accommodations({ options, onSelectOption, cmsContent }: Accommod
                       <span className="text-[10px] text-neutral-500 block leading-tight">
                         / night
                       </span>
+                      {opt.extraGuestCharge && opt.extraGuestCharge > 0 ? (
+                        <span className="text-[10px] text-neutral-500 block leading-tight mt-0.5">
+                          +₹{opt.extraGuestCharge.toLocaleString("en-IN")}/extra guest
+                        </span>
+                      ) : null}
                     </div>
                   </div>
                   <p className="text-xs sm:text-sm text-neutral-600 leading-relaxed mt-2">

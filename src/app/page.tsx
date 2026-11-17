@@ -77,6 +77,7 @@ export default async function HomePage() {
       weekendPricePerNight: opt.weekendPricePerNight ? Number(opt.weekendPricePerNight) : null,
       cleaningFee: Number(opt.cleaningFee),
       taxPercentage: Number(opt.taxPercentage),
+      extraGuestCharge: Number(opt.extraGuestCharge),
     })) ?? [];
 
   // Filter or limit by CMS configuration if defined
