@@ -96,6 +96,7 @@ export interface PropertyEditorProps {
       weekendPricePerNight: number | null;
       cleaningFee: number;
       taxPercentage: number;
+      extraGuestCharge?: number;
       summary: string | null;
       description: string;
       isActive: boolean;
@@ -422,6 +423,10 @@ export function PropertyEditorTabs({ property: initialProperty }: PropertyEditor
           : null,
         cleaningFee: Number(merged.cleaningFee),
         taxPercentage: Number(merged.taxPercentage),
+        extraGuestCharge:
+          merged.extraGuestCharge !== undefined && !isNaN(Number(merged.extraGuestCharge))
+            ? Math.max(0, Number(merged.extraGuestCharge))
+            : 0,
         summary: merged.summary || undefined,
         description: merged.description,
         isActive: merged.isActive,
@@ -995,6 +1000,26 @@ export function PropertyEditorTabs({ property: initialProperty }: PropertyEditor
                         const val = Number(e.target.value);
                         setConfigurations((prev) =>
                           prev.map((c) => (c.id === config.id ? { ...c, taxPercentage: val } : c))
+                        );
+                      }}
+                      className="w-full px-3.5 py-2 rounded-xl border border-neutral-200 text-xs text-neutral-900 focus:outline-none focus:ring-2 focus:ring-neutral-900"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-neutral-700 mb-1">
+                      Extra Guest (INR / night)
+                    </label>
+                    <input
+                      type="number"
+                      min={0}
+                      step={100}
+                      value={config.extraGuestCharge !== undefined && config.extraGuestCharge !== null ? config.extraGuestCharge : ""}
+                      onChange={(e) => {
+                        const raw = e.target.value;
+                        const val = raw === "" ? 0 : Math.max(0, Number(raw));
+                        setConfigurations((prev) =>
+                          prev.map((c) => (c.id === config.id ? { ...c, extraGuestCharge: val } : c))
                         );
                       }}
                       className="w-full px-3.5 py-2 rounded-xl border border-neutral-200 text-xs text-neutral-900 focus:outline-none focus:ring-2 focus:ring-neutral-900"

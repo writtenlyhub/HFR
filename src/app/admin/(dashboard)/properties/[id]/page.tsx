@@ -43,6 +43,7 @@ export default async function PropertyEditorPage(props: PropertyEditorPageProps)
         : null,
       cleaningFee: Number(opt.cleaningFee),
       taxPercentage: Number(opt.taxPercentage),
+      extraGuestCharge: Number(opt.extraGuestCharge),
     })),
   };
 

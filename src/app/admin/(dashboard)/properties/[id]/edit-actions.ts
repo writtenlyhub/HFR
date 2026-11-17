@@ -143,6 +143,7 @@ export async function updateListingConfiguration(
     weekendPricePerNight?: number | null;
     cleaningFee?: number;
     taxPercentage?: number;
+    extraGuestCharge?: number;
     summary?: string;
     description?: string;
     isActive: boolean;
@@ -151,6 +152,13 @@ export async function updateListingConfiguration(
   const authCheck = await requireAdminSession();
   if (!authCheck.authorized) {
     return { success: false, error: authCheck.error };
+  }
+
+  if (
+    data.extraGuestCharge !== undefined &&
+    (isNaN(data.extraGuestCharge) || data.extraGuestCharge < 0)
+  ) {
+    return { success: false, error: "Extra guest charge cannot be negative." };
   }
 
   try {
@@ -166,6 +174,9 @@ export async function updateListingConfiguration(
           weekendPricePerNight: data.weekendPricePerNight || null,
           cleaningFee: data.cleaningFee || 0,
           taxPercentage: data.taxPercentage || 12,
+          ...(data.extraGuestCharge !== undefined
+            ? { extraGuestCharge: data.extraGuestCharge }
+            : {}),
           summary: data.summary?.trim() || null,
           description: data.description?.trim() || "",
           isActive: data.isActive,
