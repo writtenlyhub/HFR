@@ -360,17 +360,9 @@ export function BookingWidget({
       const scriptLoaded = await loadRazorpayScript();
 
       if (!scriptLoaded || !window.Razorpay) {
-        // Fallback for offline development or sandbox script block:
-        console.warn(
-          "Razorpay script unavailable. Triggering test verification fallback."
+        throw new Error(
+          "Razorpay checkout failed to load. Please check your internet connection or disable ad blockers and try again."
         );
-        await executeVerification({
-          bookingId: activeHold.holdId,
-          razorpayOrderId: orderData.orderId,
-          razorpayPaymentId: `pay_test_${Date.now()}`,
-          razorpaySignature: "simulated_local_test_signature",
-        });
-        return;
       }
 
       // 3. Launch official Razorpay Checkout Modal

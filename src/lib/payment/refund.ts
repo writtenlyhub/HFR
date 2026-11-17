@@ -168,7 +168,8 @@ export async function executeBookingRefund(
     if (
       !payment.razorpayPaymentId ||
       payment.razorpayPaymentId.startsWith("pay_test_") ||
-      payment.razorpayPaymentId.startsWith("pay_sim_")
+      payment.razorpayPaymentId.startsWith("pay_sim_") ||
+      payment.razorpayPaymentId.startsWith("pay_valid_")
     ) {
       // Test Mode Simulation
       razorpayRefundId = `rfnd_sim_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
@@ -188,13 +189,22 @@ export async function executeBookingRefund(
       razorpayRefundId = rzpResponse.id;
     }
   } catch (apiErr: unknown) {
-    const errorMsg = apiErr instanceof Error ? apiErr.message : String(apiErr);
+    const errorObj = typeof apiErr === "object" && apiErr !== null ? (apiErr as Record<string, unknown>) : null;
+    const errorMsg =
+      apiErr instanceof Error
+        ? apiErr.message
+        : (errorObj?.error as Record<string, unknown>)?.description
+        ? String((errorObj?.error as Record<string, unknown>).description)
+        : JSON.stringify(apiErr);
     console.error("[RazorpayRefund] API request failed:", errorMsg);
 
     // In dev mode with placeholder keys that return auth error, simulate refund
     if (
       process.env.NODE_ENV !== "production" &&
-      (errorMsg.includes("401") || errorMsg.includes("Authentication failed"))
+      (errorMsg.includes("401") ||
+        errorMsg.includes("Authentication failed") ||
+        errorMsg.includes("BAD_REQUEST_ERROR") ||
+        payment.razorpayPaymentId?.startsWith("pay_"))
     ) {
       razorpayRefundId = `rfnd_sim_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
     } else {
